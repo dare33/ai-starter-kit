@@ -2,7 +2,7 @@
 
 Version: 1.6 — Last updated: 2026-09-15
 
-Companions: `project_structure_prompt.md`, `project_security_prompt.md`, and `PROJECTS.md` (the portfolio index, kept outside any repo, suggested `~/projects/PROJECTS.md`).
+Companions: `project_structure_prompt.md`, `project_security_prompt.md`, and `PROJECTS.md` (the portfolio index, kept outside any repo, suggested `~/developer/PROJECTS.md`).
 
 `PROJECTS.md` row format — create the file with this header if it doesn't exist yet:
 

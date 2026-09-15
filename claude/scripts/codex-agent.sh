@@ -321,7 +321,7 @@ ACCOUNT_HOMES=("$REAL_HOME/.codex" "$REAL_HOME/.codex-b")
 # inside. INSTALL-TIME SETTING: edit this line to the parent folder(s) where
 # your repos live (the kit's install.sh sets it for you). Deliberately not
 # env- or flag-configurable, same reasoning as ACCOUNT_HOMES.
-WRITE_PARENTS=("$REAL_HOME/projects")
+WRITE_PARENTS=("$REAL_HOME/developer")
 
 # --- validation ------------------------------------------------------------
 case "$SANDBOX" in

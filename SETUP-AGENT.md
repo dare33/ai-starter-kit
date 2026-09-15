@@ -345,7 +345,7 @@ grouped, never as a wall of text:
 3. **Experience:** never used AI tools / used ChatGPT or Claude in a browser
    / comfortable with code.
 4. **Spelling:** Australian-British (default) / American.
-5. **Where projects live:** `~/projects` (default) / somewhere else, not
+5. **Where projects live:** `~/developer` (default) / somewhere else, not
    your home folder itself (free text).
 6. **Always / never:** anything Claude should always do or never do? (free
    text, optional — e.g. "always explain acronyms", "never send emails").

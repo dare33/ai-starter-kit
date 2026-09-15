@@ -20,7 +20,7 @@ This folder contains a system of companion prompts for creating and maintaining 
 | `project_structure_prompt.md`   | Repo structure, documentation system, session workflow, working discipline, quality gates.                | At creation (via kickoff)                                    |
 | `project_security_prompt.md`    | Tiered security & privacy controls (Low/Medium/High), tier rubric, escalation, decommissioning.           | At creation (via kickoff), on retrofits, and at tier changes |
 | `project_maintenance_prompt.md` | Monthly portfolio audit: doc drift, dependencies, credentials, spend, backups, tier re-checks, lifecycle. | Recurring, across all projects                               |
-| `PROJECTS.md`                   | Portfolio index — one row per project (purpose, status, tier, credentials, spend, remote, last touched) plus the maintenance sweep log. Lives outside any repo (suggested `~/projects/PROJECTS.md`), not in this suite. | Continuously; the hub every other file writes to             |
+| `PROJECTS.md`                   | Portfolio index — one row per project (purpose, status, tier, credentials, spend, remote, last touched) plus the maintenance sweep log. Lives outside any repo (suggested `~/developer/PROJECTS.md`), not in this suite. | Continuously; the hub every other file writes to             |
 
 ## How they interact
 

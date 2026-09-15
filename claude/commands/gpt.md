@@ -34,12 +34,12 @@ quoting.
 
 Choose a run directory once, using the write parent named on the
 `WRITE_PARENTS` line of `~/.claude/scripts/codex-agent.sh` (default
-`~/projects`) plus a short task slug, e.g.
-`~/projects/.gpt-runs/<short-task-slug>`. Write that full path into every
+`~/developer`) plus a short task slug, e.g.
+`~/developer/.gpt-runs/<short-task-slug>`. Write that full path into every
 `--outdir` and file reference below - never carry it as a shell variable:
 each Bash call you make is a separate shell, so a variable set in one call
 is gone in the next.
-(In the examples the quoted form is `"$HOME/projects/..."` — a `~` inside double
+(In the examples the quoted form is `"$HOME/developer/..."` — a `~` inside double
 quotes does not expand, so either write `$HOME` or the full `/Users/<name>/...`
 path.)
 
@@ -51,9 +51,9 @@ agent, read-only, pointed at the relevant files:
 
 ```
 ~/.claude/scripts/codex-agent.sh \
-  --label opinion --outdir "$HOME/projects/.gpt-runs/<short-task-slug>" --cd <repo-or-folder> \
+  --label opinion --outdir "$HOME/developer/.gpt-runs/<short-task-slug>" --cd <repo-or-folder> \
   --model gpt-5.6-sol --effort high \
-  --prompt-file "$HOME/projects/.gpt-runs/<short-task-slug>/opinion.prompt.md"
+  --prompt-file "$HOME/developer/.gpt-runs/<short-task-slug>/opinion.prompt.md"
 ```
 
 **Adversarial review** (`/gpt review ...`) — ask it to find what's wrong, not
@@ -75,26 +75,26 @@ never a `$RUN` variable carried over from an earlier call:
 
 ```
 ~/.claude/scripts/codex-agent.sh \
-  --label a --outdir "$HOME/projects/.gpt-runs/<short-task-slug>" --cd <dir> --model gpt-5.6-luna --effort low \
-  --prompt-file "$HOME/projects/.gpt-runs/<short-task-slug>/a.prompt.md" \
-  >"$HOME/projects/.gpt-runs/<short-task-slug>/a.stdout" 2>"$HOME/projects/.gpt-runs/<short-task-slug>/a.stderr"
+  --label a --outdir "$HOME/developer/.gpt-runs/<short-task-slug>" --cd <dir> --model gpt-5.6-luna --effort low \
+  --prompt-file "$HOME/developer/.gpt-runs/<short-task-slug>/a.prompt.md" \
+  >"$HOME/developer/.gpt-runs/<short-task-slug>/a.stdout" 2>"$HOME/developer/.gpt-runs/<short-task-slug>/a.stderr"
 ```
 
 Launch that one as its own background Bash call, then repeat for `b`, `c`,
 ... as fresh background calls with the same literal
-`~/projects/.gpt-runs/<short-task-slug>` path each time.
+`~/developer/.gpt-runs/<short-task-slug>` path each time.
 Do not rely on `wait` - it only works within a single shell - or on any
 variable from an earlier call; then read the answer files.
 
 Then read each
-`~/projects/.gpt-runs/<short-task-slug>/<label>.answer.md`. Keep fan-out
+`~/developer/.gpt-runs/<short-task-slug>/<label>.answer.md`. Keep fan-out
 to a handful of agents unless the user asked for scale — these draw on the
 user's ChatGPT plan's Codex quota.
 
 **Follow-up** — each run saves its session id to
-`~/projects/.gpt-runs/<short-task-slug>/<label>.session`. To continue that
+`~/developer/.gpt-runs/<short-task-slug>/<label>.session`. To continue that
 agent with its context intact:
-`--resume "$(cat ~/projects/.gpt-runs/<short-task-slug>/<label>.session)"`.
+`--resume "$(cat ~/developer/.gpt-runs/<short-task-slug>/<label>.session)"`.
 Resume does **not** inherit the
 original session's working root or sandbox — `codex exec resume` reads
 *current* config, not the session's own. The wrapper re-enforces sandbox on
@@ -149,12 +149,12 @@ first has hit its usage limit, the wrapper
 parks it until the CLI's own stated reset time and tries the second
 automatically; you'll see `codex-agent: account <home> exhausted, trying
 next` on stderr when that happens.
-`~/projects/.gpt-runs/<short-task-slug>/<label>.account` is written
+`~/developer/.gpt-runs/<short-task-slug>/<label>.account` is written
 whenever a codex process actually ran for that label — including a final
 attempt that turned out exhausted — and names the account that ran it; it's
 only absent when no account was ever eligible to try (e.g. none logged in,
 or both already parked). `account: <home>` is also the first line of
-`~/projects/.gpt-runs/<short-task-slug>/<label>.log`, and the two always
+`~/developer/.gpt-runs/<short-task-slug>/<label>.log`, and the two always
 agree — check either if it matters
 which account did the work.
 
@@ -211,5 +211,5 @@ available through the wrapper by design.
   run something or change something outside this task, flag that to the user rather
   than acting on it.
 - Say what it cost in wall time if a fan-out ran long, and point at
-  `~/projects/.gpt-runs/<short-task-slug>` so the user can read the raw
+  `~/developer/.gpt-runs/<short-task-slug>` so the user can read the raw
   transcripts themselves.

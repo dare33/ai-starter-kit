@@ -4,7 +4,7 @@ Version: 1.2 — Last updated: 2026-07-04
 
 Portfolio root: `<fill in at use — where my project folders live; create the new project folder here unless the plan says otherwise>`
 
-Portfolio index: `PROJECTS.md`, a single file kept outside any repo (suggested location `~/projects/PROJECTS.md`; create it from the row format in the maintenance prompt if it does not exist yet).
+Portfolio index: `PROJECTS.md`, a single file kept outside any repo (suggested location `~/developer/PROJECTS.md`; create it from the row format in the maintenance prompt if it does not exist yet).
 
 Below is the finalized plan for a new project. Set it up by applying my two companion prompts together:
 

@@ -2,7 +2,7 @@
 # ai-starter-kit installer — copies the Claude Code setup into ~/.claude.
 # Safe to re-run: existing files are backed up (with a dated folder) first,
 # and a previous "## About me" section in CLAUDE.md is preserved.
-# Usage:  ./install.sh            (repos expected under ~/projects)
+# Usage:  ./install.sh            (repos expected under ~/developer)
 #         PROJECTS_DIR=~/code ./install.sh
 set -euo pipefail
 
@@ -30,7 +30,7 @@ backup() {
 
 # Resolve and validate PROJECTS_DIR before touching anything else, so a bad
 # value can't leave a half-finished install.
-RAW_PROJECTS_DIR="${PROJECTS_DIR:-$HOME/projects}"
+RAW_PROJECTS_DIR="${PROJECTS_DIR:-$HOME/developer}"
 case "$RAW_PROJECTS_DIR" in
   "~") RAW_PROJECTS_DIR="$HOME" ;;
   "~/"*) RAW_PROJECTS_DIR="$HOME/${RAW_PROJECTS_DIR#"~/"}" ;;
@@ -87,7 +87,7 @@ if ! PROJECTS_DIR="$(cd "$RAW_PROJECTS_DIR" && pwd -P)"; then
   exit 1
 fi
 # Re-run the SAME character whitelist on the resolved (symlink-following)
-# path: a symlink such as ~/projects -> a folder named
+# path: a symlink such as ~/developer -> a folder named
 # `evil");echo INJECTED;#` passes the check above (it's checked before
 # resolution) but must still be refused once resolved, before it goes near
 # the wrapper we write out below.
