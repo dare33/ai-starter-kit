@@ -2,9 +2,9 @@
 description: Hand work to one or more GPT agents (OpenAI Codex CLI) and report back
 argument-hint: [review|fan|<question or task>]
 allowed-tools: Bash(~/.claude/scripts/codex-agent.sh:*), Bash(mkdir:*), Bash(cat:*), Bash(ls:*), Read, Write, Glob, Grep
-version: 2.3 (2026-09-15 - --model slug list adds gpt-6-astra with wrapper v2.7; current config.toml default corrected; minimal effort noted as rejected by gpt-5.6-sol)
+version: 2.4 (2026-09-15 - astra reachable through the wrapper from codex-cli 0.154 (probed OK after the npm upgrade); the 0.149.1 refusal kept as history)
 ---
-<!-- version history: 2.2 (2026-08-19 - two-account failover via codex-agent.sh v2.2; --model slugs documented; exit-code sharing between "codex failed" and "GPT unavailable" documented honestly, with the stderr discriminator; resume facts corrected) -->
+<!-- version history: 2.3 (2026-09-15 - --model slug list adds gpt-6-astra with wrapper v2.7; current config.toml default corrected; minimal effort noted as rejected by gpt-5.6-sol); 2.2 (2026-08-19 - two-account failover via codex-agent.sh v2.2; --model slugs documented; exit-code sharing between "codex failed" and "GPT unavailable" documented honestly, with the stderr discriminator; resume facts corrected) -->
 
 The user wants GPT agents involved in this task: **$ARGUMENTS**
 
@@ -114,11 +114,13 @@ at `high` for opinions and reviews (a reviewer is never below `high`),
 `gpt-5.6-luna` or `gpt-5.6-terra` at `low` for mechanical slices - and when
 the user has asked for the top tier, pass `--model gpt-6-astra` explicitly -
 leaving it unflagged is not a way to request it, since a failover to another
-account would serve that account's default. Older Codex CLIs refuse `gpt-6-astra` (seen with codex-cli 0.149.1 on
-2026-09-15: "requires a newer version of Codex"); if that happens, `brew
-upgrade --cask codex` and re-try; until then pin a 5.6 model on every run.
-Read the run header for the served account and model. The CLAUDE.md cost rule
-says raising a tier needs the user's say-so. If the user names a depth or speed
+account would serve that account's default. `gpt-6-astra` needs codex-cli
+0.154 or newer (0.149.1 was refused by the API with "requires a newer version
+of Codex"; probed OK at 0.154.0 on 2026-09-15) - if you see that error, run
+`brew upgrade --cask codex` and re-try. A pinned astra run that fails over to
+an account whose plan does not serve it may be refused at the API. Read the
+run header for the served account and model. The CLAUDE.md cost rule says
+raising a tier needs the user's say-so. If the user names a depth or speed
 preference in their request —
 "quick", "cheap", "think hard about this", "deep" — translate it to
 `--effort`: `none | minimal | low | medium | high | xhigh | max` (the
