@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(__HOME__/.claude/scripts/codex-agent.sh:*)",
+      "Bash(~/.claude/scripts/codex-agent.sh:*)"
+    ]
+  }
+}
