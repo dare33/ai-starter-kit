@@ -56,8 +56,6 @@ either:       foundation phase first ──► independent phases in parallel wo
 - `project-initiation-suite`: the kernel. Its structure prompt's review-convergence rules and
   the three-round cap remain the default for shared and production work; this suite is the
   named, owner-granted deviation for solo prototypes.
-- `agent-stack-comparison-suite`: a twin run doubles every cost in this suite. Run the
-  comparison on a short frozen plan, then pick one lane and switch it to the speed profile.
 
 ## Conventions
 

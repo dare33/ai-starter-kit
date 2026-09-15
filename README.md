@@ -27,18 +27,21 @@ suites/
 
 ## Requirements
 
-- macOS (v1). The wrapper uses BSD `stat` and trusts codex only at `/opt/homebrew/bin`
-  or `/usr/local/bin`. Windows is not supported yet; a PowerShell port of the wrapper
-  exists and can be added when someone needs it.
-- Claude Code (Pro or Max plan). Codex CLI via `brew install codex` plus a
-  ChatGPT Plus/Pro login for the GPT roles; without it the `/gpt` command and
-  `reviewer-gpt` report "unavailable" and everything else still works.
+- macOS (v1), your own Mac with an administrator account (the default for a
+  personal Mac). The wrapper uses BSD `stat` and trusts codex only at
+  `/opt/homebrew/bin` or `/usr/local/bin`. Windows is not supported yet; ask
+  the person who sent you the kit if you need it.
+- Claude Code (Pro or Max plan). Codex CLI via `brew install --cask codex`
+  plus a ChatGPT Plus/Pro login for the GPT roles; without it the `/gpt`
+  command and `reviewer-gpt` report "unavailable" and everything else still
+  works.
 
 ## Updating
 
 Pull the latest kit and re-run `./install.sh`. It backs up every file it
-replaces with a dated suffix, so a local edit to `CLAUDE.md` is never lost —
-diff against the backup and re-apply what you want.
+replaces into a dated folder under `~/.claude/backups/`, so a local edit to
+`CLAUDE.md` is never lost — diff against the backup and re-apply what you
+want.
 
 ## Provenance
 

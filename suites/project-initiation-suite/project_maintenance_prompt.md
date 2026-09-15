@@ -1,8 +1,14 @@
 # Project Maintenance Prompt
 
-Version: 1.5 — Last updated: 2026-07-19
+Version: 1.6 — Last updated: 2026-09-15
 
 Companions: `project_structure_prompt.md`, `project_security_prompt.md`, and `PROJECTS.md` (the portfolio index, kept outside any repo, suggested `~/projects/PROJECTS.md`).
+
+`PROJECTS.md` row format — create the file with this header if it doesn't exist yet:
+
+| Project | Purpose | Status | Tier | Credentials | Expected spend | Remote | Last touched |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| example-project | one-line purpose | active | Low | none | $0/mo | github.com/you/example-project (or local only) | 2026-09-15 |
 
 Portfolio root: `<fill in at use — the folder containing my project folders>`
 

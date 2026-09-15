@@ -1,4 +1,4 @@
-Version: 2.0 — Last updated: 2026-09-15
+Version: 2.0 (kit copy: remote optional) — Last updated: 2026-09-15
 
 I want you to scaffold a new project using my preferred repo operating structure. A fully fleshed-out plan already exists for this project — treat it as the source of truth for every decision below. Do not copy domain-specific features or content from any previous project.
 
@@ -48,7 +48,7 @@ Create one self-contained project folder named `<project-slug>/`. These files an
 - Do not create a parent-level `CLAUDE.md` unless the parent folder intentionally governs multiple related projects.
 - `PLAN.md` is seeded from the existing plan, not rewritten from scratch.
 - For projects that contain code, add `src/` (or the stack-idiomatic source root), `tests/`, and the stack manifest per the conditional table in Step 2: `pyproject.toml` + `src/<package_name>/` for Python, `package.json` + `src/` for Node/TS, `Cargo.toml` + `src/` for Rust, `go.mod` + idiomatic package layout for Go, and so on. Keep the same architecture principle everywhere: entry points are thin, reusable logic lives in source modules, and tests exercise source modules rather than shelling through entry points wherever practical.
-- Initialize a git repository and make an initial commit once the scaffold is complete. `.gitignore` must be written before that first commit. Create a private GitHub remote and push. Projects live in plain local folders — never inside cloud-synced directories (Google Drive, OneDrive, Dropbox), which corrupt git repositories.
+- Initialize a git repository and make an initial commit once the scaffold is complete. `.gitignore` must be written before that first commit. Create a private GitHub remote and push if a GitHub account is set up; otherwise keep the repo local, record that in `CLAUDE.md`, and add the remote later. Projects live in plain local folders — never inside cloud-synced directories (Google Drive, OneDrive, Dropbox), which corrupt git repositories.
 - Register the project in `PROJECTS.md`, the portfolio index kept outside any repo (suggested `~/projects/PROJECTS.md`): purpose, status, security tier, credentials held, expected monthly spend (mirrored from `SECURITY.md`, which is the authoritative record), remote, and date. This is an owner-side step that happens outside the repo: the index is my personal portfolio lens, and its upkeep is never a repo obligation. In-repo sessions record lifecycle, tier, and spend changes in `CHANGELOG.md` and `SECURITY.md` as they already must; my maintenance sweep syncs the index from those. If this prompt is used without the kickoff prompt and the portfolio root or index location isn't evident, ask for them rather than guessing.
 
 ## Step 2 — Conditional modules (only if the plan calls for them)
@@ -314,6 +314,6 @@ Before reporting, verify:
 - The module inventory in `CLAUDE.md` (present and deliberately-absent lists) matches what actually exists on disk.
 - All placeholders are explicitly marked.
 - `.gitignore` was in place before the first commit.
-- The project has a private remote and a row in `PROJECTS.md`.
+- The project has a private remote, or is recorded as local-only with the remote to add later, and a row in `PROJECTS.md`.
 
 Then finish with a single combined report: the project profile derived; modules included and excluded with one-line reasons; when the security prompt is applied, the confirmed tier with rubric scores and controls implemented or deferred; and any placeholders that need my input.

@@ -13,8 +13,9 @@ decides how fast the build is allowed to go and records who granted it.
 1. Read the plan and the kernel's proposal. Confirm the project qualifies: one owner, no other
    user's data, no money, Low security tier, private repo, no external audience during the
    run. If any of these fails, say so and stop — the profile does not apply.
-2. Ask the owner the **six lever questions** with the harness's structured question tool,
-   one click each, defaults marked. Never infer an answer.
+2. Ask the owner the **six lever questions** with the harness's structured question tool
+   (or plain chat questions if no such tool exists), one click each, defaults marked. Never
+   infer an answer.
    1. **Deadline and horizon.** The date the prototype must be in the owner's hands, and the
       phase number to run to without owner involvement.
    2. **Merge.** Standing exception for the run (a phase branch merges once its acceptance
@@ -42,4 +43,5 @@ decides how fast the build is allowed to go and records who granted it.
 The reviewer is never below high effort. One writer per worktree. Tests are not cut to buy
 speed. Hard rules and the security tier stand. The manager reports every lowering of effort
 or model and never raises either without the owner. A failed build returns to the manager,
-never to a silent model swap. The repo never references the owner's note systems.
+never to a silent model swap. The repo never references any personal system outside itself
+(a portfolio index, personal notes, and the like) — state any needed rule inline.

@@ -18,18 +18,21 @@ with your Claude account.
 ## 2. Open a Code session
 
 In the Claude app, click the **Code** tab. When it asks which folder to work
-in, choose your home folder (the one with your name on it) and click Open.
+in, choose your home folder (it is the folder with the little house icon and
+your username, not Desktop or Documents) and click Open.
 
 ## 3. Paste this one message
 
 ```
-Please set up my computer using the AI starter kit at https://github.com/dare33/ai-starter-kit — clone it into ~/ai-starter-kit and follow the SETUP-AGENT.md file inside it, phase by phase.
+Please set up my computer using the AI starter kit at https://github.com/dare33/ai-starter-kit. First check Apple's command line tools with `xcode-select -p` and install them if missing (tell me when to click Install). Then clone the kit into ~/ai-starter-kit and follow the SETUP-AGENT.md file inside it, phase by phase.
 ```
 
 ## 4. Do the three things it asks you to do
 
-Claude will explain each step as it goes and ask permission before running
-things. Click **Allow** when it asks. At most, it will ask you to:
+It will ask your permission several times as it goes — click Allow. Once it
+will ask to run the installer outside its safety sandbox; that is expected,
+click Allow once. Your Mac will also ask once whether Claude may control
+Terminal — click Allow. Three steps need something from you:
 
 1. **Click Install** in a small window that pops up (Apple's developer tools).
 2. **Type your Mac password** into a Terminal window that Claude opens for
@@ -50,8 +53,13 @@ personal rules file so every future session starts knowing them.
 - Ask it to **plan a small project before building it**. Watch it plan,
   ask you to confirm, then delegate the build to a helper.
 - Type **/gpt** followed by a question to get GPT's take.
-- To start a real project, ask Claude: *"Read ~/ai-starter-kit/suites and
-  walk me through starting a new project with the solo-speed suite."*
+- Ask Claude to help you write a document, or to plan a small personal
+  project and show you the plan before doing anything.
+
+When you want to start a real software project, ask Claude to read
+`~/ai-starter-kit/suites` and walk you through the solo-speed suite — that
+step needs a free GitHub account, which Claude will help you set up when you
+get there.
 
 ## If something goes wrong
 

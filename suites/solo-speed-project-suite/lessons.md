@@ -4,19 +4,19 @@ Dated per run. Fold a lesson into a prompt when it changes what an agent should 
 
 ## Run 1 — solo prototype, Claude stack, 2026-09-03 → 2026-09-04
 
-1. **The build was fast; the gate was slow.** Seven phases, three spikes, 1,346 unit tests
-   and 56 device e2e in about two days. One phase then took twelve bounded review passes
-   over two sessions, each finding a narrower interaction than the last, until the owner
-   capped it. The kernel's three-round cap existed and was overridden in the field.
-2. **Findings narrow before they stop.** By the sixth pass the Opus reviewer reported nothing
-   blocking; the other half kept reproducing count-in edge cases the acceptance criteria never
+1. **The build was fast; the gate was slow.** A short build across several phases and spikes
+   finished in about two days. One phase then took far more bounded review passes than the
+   cap allowed, over two sessions, each finding a narrower interaction than the last, until
+   the owner capped it. The kernel's three-round cap existed and was overridden in the field.
+2. **Findings narrow before they stop.** After several passes one reviewer reported nothing
+   blocking; the other half kept finding new edge cases the acceptance criteria never
    named. Cap by rule; a reviewer at high effort will always find something.
 3. **A pair on a prototype buys detection of mistakes nobody will hit.** Reserve the pair for
    changes that can lose the owner's data. Everything else, one reviewer.
 4. **Per-phase ceremony cost about a session.** CHANGELOG entry, handoff rewrite, metrics
-   row, fold-decision file, docs sync and the final eleven documentation corrections. Batch it.
-5. **Nothing measured gating time, so nobody saw it.** The owner intervened on the twelfth
-   pass. The pace review exists so the numbers are on the table before that.
+   row, fold-decision file, docs sync and a final round of documentation corrections. Batch it.
+5. **Nothing measured gating time, so nobody saw it.** The owner intervened only after many
+   review passes. The pace review exists so the numbers are on the table before that.
 6. **Market research pointed at the same thing.** The product's differentiators were built;
    the table-stakes features waited behind gates. Speed was the product risk.
 7. **One writer per worktree, again.** A mechanic applying a plan edit ran `git stash` to

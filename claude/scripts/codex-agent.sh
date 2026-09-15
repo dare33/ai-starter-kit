@@ -1,21 +1,9 @@
 #!/bin/bash
 # codex-agent.sh version: 2.7
 #
-# ^ THE wrapper version, and the only line the weekly drift lint reads. Keep it
-# on line 2, keep the exact `codex-agent.sh version: N.N` form, and bump it in
-# the same commit that changes behaviour.
-#
-# Why this line exists (added 2026-08-23, lint finding H6). The 2026-08-20
-# maintenance run added a check comparing each machine's installed wrapper
-# against "the header version in system/codex-agent-master.sh". No such header
-# existed. The first version-shaped string in this file was the `(v2.4)` on the
-# next line - a SUB-COMPONENT version for the startup sanitiser, not the
-# wrapper - so anything reading the header mechanically got 2.4 for a v2.6
-# wrapper and would have reported drift on every machine that was actually
-# current, or none at all. A check that cannot fail is worse than no check.
-# Windows installs are PORTS, so the comparison is this recorded version
-# against the version recorded for that machine in memory/machines.md, never a
-# byte comparison.
+# Line 2 above is the version header. Keep it on line 2, in the exact
+# `codex-agent.sh version: N.N` form, and bump it in the same commit that
+# changes behaviour, so an installed copy can be compared to its source.
 #
 # NOTE: the sub-component tags further down (`startup sanitiser (v2.4)`, and
 # the `v2.2`/`v2.3`/`v2.5` markers in the change notes) version individual
@@ -100,9 +88,9 @@ unset CDPATH BASH_ENV ENV
 PATH=/usr/bin:/bin:/usr/sbin:/sbin:/opt/homebrew/bin:/usr/local/bin
 export PATH
 unset CODEX_HOME
-# codex-agent-master.sh v2.7 (2026-09-15) — installed copy: ~/.claude/scripts/codex-agent.sh
+# codex-agent.sh v2.7 (2026-09-15)
 # v2.7 (2026-09-15): --model allowlist adds gpt-6-astra (it was already the
-#   config.toml default on one machine, so unflagged runs used it while an
+#   config.toml default on a machine, so unflagged runs used it while an
 #   explicit --model gpt-6-astra was refused). Effort help now says that not
 #   every model accepts every level (gpt-5.6-sol rejects minimal - probed
 #   2026-09-15, API unsupported_value). No other behaviour change.
@@ -522,7 +510,7 @@ fi
 case "$SCHEMA" in -*) die "--schema path may not start with a dash (got '$SCHEMA')" ;; esac
 [ -z "$SCHEMA" ] || [ -f "$SCHEMA" ] || die "schema file not found: $SCHEMA"
 
-# Trusted-roots check (the owner's ruling 2026-08-13, ported from main PC): refuse
+# Trusted-roots check (the owner's ruling 2026-08-13, ported from the Windows port): refuse
 # a codex that resolves anywhere unexpected. HONEST SCOPE, and a deliberate
 # divergence from the win port flagged in the 2026-08-19 round-5 cross-vendor
 # review: this resolves codex via PATH (`command -v`) and trusts two fixed

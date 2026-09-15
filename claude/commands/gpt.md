@@ -1,7 +1,7 @@
 ---
 description: Hand work to one or more GPT agents (OpenAI Codex CLI) and report back
 argument-hint: [review|fan|<question or task>]
-allowed-tools: Bash, Read, Write, Glob, Grep
+allowed-tools: Bash(~/.claude/scripts/codex-agent.sh:*), Bash(mkdir:*), Bash(wait), Bash(cat:*), Bash(ls:*), Read, Write, Glob, Grep
 version: 2.3 (2026-09-15 - --model slug list adds gpt-6-astra with wrapper v2.7; current config.toml default corrected; minimal effort noted as rejected by gpt-5.6-sol)
 ---
 <!-- version history: 2.2 (2026-08-19 - two-account failover via codex-agent.sh v2.2; --model slugs documented; exit-code sharing between "codex failed" and "GPT unavailable" documented honestly, with the stderr discriminator; resume facts corrected) -->
@@ -11,7 +11,9 @@ The user wants GPT agents involved in this task: **$ARGUMENTS**
 You orchestrate them through the wrapper at
 `~/.claude/scripts/codex-agent.sh` — the only allowlisted codex
 entry point. Never call `codex` directly; the wrapper exists so the
-sandbox-bypass flags stay unreachable.
+sandbox-bypass flags stay unreachable. This command's Bash access is scoped
+to the wrapper's own allow rule plus `mkdir`, `cat`, `ls`, and `wait` - never
+run `codex` or any other command directly.
 
 ## The single rule that governs quality
 
@@ -28,9 +30,9 @@ quoting.
 
 ## Setup
 
-Set a run directory under the session scratchpad first, e.g.
-`RUN=<scratchpad>/gpt/<short-task-slug>`, and use it for every `--outdir` in
-this task so prompts, answers and transcripts stay together.
+Set a run directory inside the write parent first, e.g.
+`RUN=~/projects/.gpt-runs/<short-task-slug>`, and use it for every
+`--outdir` in this task so prompts, answers and transcripts stay together.
 
 ## Patterns
 
@@ -52,15 +54,25 @@ told you nothing you didn't already believe.
 
 **Fan-out** (`/gpt fan ...`) — N independent agents on N slices of the work,
 run concurrently, then synthesise. Write each prompt file first, launch them
-all in the background from one command, and wait:
+each as its own command (not a `for` loop) in the background, and wait:
+the Bash allow rule for the wrapper is a literal prefix match on the command
+string, and a `for ... do ~/.claude/scripts/codex-agent.sh ...; done` loop
+does not match `Bash(~/.claude/scripts/codex-agent.sh:*)`, so it would need a
+fresh permission prompt per agent instead of running unattended.
 
 ```
-for t in a b c; do
-  ~/.claude/scripts/codex-agent.sh \
-    --label "$t" --outdir "$RUN" --cd <dir> --model gpt-5.6-luna --effort low \
-    --prompt-file "$RUN/$t.prompt.md" \
-    >"$RUN/$t.stdout" 2>"$RUN/$t.stderr" &
-done
+~/.claude/scripts/codex-agent.sh \
+  --label a --outdir "$RUN" --cd <dir> --model gpt-5.6-luna --effort low \
+  --prompt-file "$RUN/a.prompt.md" \
+  >"$RUN/a.stdout" 2>"$RUN/a.stderr" &
+~/.claude/scripts/codex-agent.sh \
+  --label b --outdir "$RUN" --cd <dir> --model gpt-5.6-luna --effort low \
+  --prompt-file "$RUN/b.prompt.md" \
+  >"$RUN/b.stdout" 2>"$RUN/b.stderr" &
+~/.claude/scripts/codex-agent.sh \
+  --label c --outdir "$RUN" --cd <dir> --model gpt-5.6-luna --effort low \
+  --prompt-file "$RUN/c.prompt.md" \
+  >"$RUN/c.stdout" 2>"$RUN/c.stderr" &
 wait
 ```
 
@@ -114,9 +126,11 @@ accepts every effort level: `gpt-5.6-sol` rejects `minimal`
 
 ## Accounts
 
-The wrapper holds two fixed ChatGPT-plan account homes and picks whichever
-one has usage left, in a fixed order — this is not something you choose or
-pass a flag for. If the first account has hit its usage limit, the wrapper
+The wrapper holds one or two fixed ChatGPT-plan account homes and picks
+whichever has usage left, in a fixed order — this is not something you
+choose or pass a flag for. A second account is optional; most people only
+have the first one configured. If a second account is configured and the
+first has hit its usage limit, the wrapper
 parks it until the CLI's own stated reset time and tries the second
 automatically; you'll see `codex-agent: account <home> exhausted, trying
 next` on stderr when that happens. `$RUN/<label>.account` is written
