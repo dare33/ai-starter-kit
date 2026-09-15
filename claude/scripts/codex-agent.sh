@@ -93,7 +93,9 @@ unset CODEX_HOME
 #   config.toml default on a machine, so unflagged runs used it while an
 #   explicit --model gpt-6-astra was refused). Effort help now says that not
 #   every model accepts every level (gpt-5.6-sol rejects minimal - probed
-#   2026-09-15, API unsupported_value). No other behaviour change.
+#   2026-09-15, API unsupported_value). No other behaviour change. Comments
+#   refreshed later the same day after the CLI upgrade to 0.154.0 (astra
+#   probe OK); line 2 unchanged because no behaviour changed.
 #
 #@help-start
 # codex-agent.sh — run one GPT agent (OpenAI Codex CLI) non-interactively and
@@ -335,12 +337,10 @@ case "$EFFORT" in
 esac
 
 # Fixed allowlist of literal slugs (the three 5.6 slugs probed end-to-end
-# 2026-08-13). gpt-6-astra (v2.7) is a real slug that the account's desktop
-# app serves, but the explicit --model probe through THIS wrapper on
-# 2026-09-15 at codex-cli 0.149.1 was refused by the API - "requires a newer
-# version of Codex" - so it stays unusable here until the CLI is upgraded and
-# re-probed. Probe any new slug before adding it: a non-existent one fails at
-# the API, not here.
+# 2026-08-13; gpt-6-astra probed end-to-end 2026-09-15 at codex-cli 0.154.0 -
+# 0.149.1 had refused it with "requires a newer version of Codex", so a slug
+# can also fail on CLI version, not only on existence). Probe any new slug
+# before adding it: a non-existent one fails at the API, not here.
 case "$MODEL" in
   ""|gpt-5.6-sol|gpt-5.6-terra|gpt-5.6-luna|gpt-6-astra) ;;
   *) die "model must be one of: gpt-5.6-sol gpt-5.6-terra gpt-5.6-luna gpt-6-astra (got '$MODEL')" ;;
