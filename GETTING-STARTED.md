@@ -6,9 +6,11 @@ to, the ability to get a second opinion from OpenAI's GPT models from inside
 Claude, and two ready-made recipes for starting a project properly. Claude
 does the whole install for you. You never open a terminal yourself.
 
-You need a Mac, about 45 minutes, a **Claude Pro or Max** subscription, and
-optionally a **ChatGPT Plus or Pro** subscription (for the GPT second-opinion
-part; everything else works without it).
+You need a Mac, about 45 minutes, and a **Claude Pro or Max** subscription.
+Add an Apple-silicon Mac and a **ChatGPT** subscription for the optional GPT
+second-opinion part (any Mac works for everything else). A paid ChatGPT plan
+gives more usage; if it turns out your plan doesn't include Codex, that's
+fine — skip it and everything else still works.
 
 ## 1. Install the Claude app
 
@@ -17,9 +19,9 @@ with your Claude account.
 
 ## 2. Open a Code session
 
-In the Claude app, click the **Code** tab. When it asks which folder to work
-in, choose your home folder (it is the folder with the little house icon and
-your username, not Desktop or Documents) and click Open.
+In the Claude app, click the **Code** tab. When it asks where to work,
+choose Local if it offers a choice, then pick your home folder (the folder
+with the little house icon and your username, not Desktop or Documents).
 
 ## 3. Paste this one message
 
@@ -29,10 +31,9 @@ Please set up my computer using the AI starter kit at https://github.com/dare33/
 
 ## 4. Do the three things it asks you to do
 
-It will ask your permission several times as it goes — click Allow. Once it
-will ask to run the installer outside its safety sandbox; that is expected,
-click Allow once. Your Mac will also ask once whether Claude may control
-Terminal — click Allow. Three steps need something from you:
+It will ask your permission several times — click Allow. It will also ask to
+run the installer outside its safety sandbox, and once whether Claude may
+control Terminal — click Allow both times. Three steps need something from you:
 
 1. **Click Install** in a small window that pops up (Apple's developer tools).
 2. **Type your Mac password** into a Terminal window that Claude opens for
@@ -52,14 +53,13 @@ personal rules file so every future session starts knowing them.
 
 - Ask it to **plan a small project before building it**. Watch it plan,
   ask you to confirm, then delegate the build to a helper.
-- Type **/gpt** followed by a question to get GPT's take.
+- Type **/gpt** followed by a question to get GPT's take (if you set up GPT).
 - Ask Claude to help you write a document, or to plan a small personal
   project and show you the plan before doing anything.
 
 When you want to start a real software project, ask Claude to read
-`~/ai-starter-kit/suites` and walk you through the solo-speed suite — that
-step needs a free GitHub account, which Claude will help you set up when you
-get there.
+`~/ai-starter-kit/suites` and walk you through the solo-speed suite. A free
+GitHub account is optional — Claude can keep a project on your Mac only.
 
 ## If something goes wrong
 

@@ -12,8 +12,10 @@ You orchestrate them through the wrapper at
 `~/.claude/scripts/codex-agent.sh` — the only allowlisted codex
 entry point. Never call `codex` directly; the wrapper exists so the
 sandbox-bypass flags stay unreachable. This command's Bash access is scoped
-to the wrapper's own allow rule plus `mkdir`, `cat`, `ls`, and `wait` - never
-run `codex` or any other command directly.
+to the wrapper's own allow rule plus `mkdir`, `cat`, `ls`, and `wait`: these
+commands are pre-approved for this command; anything else still asks the
+person for permission - never ask for it; the wrapper is the only way to run
+codex.
 
 ## The single rule that governs quality
 
@@ -30,8 +32,9 @@ quoting.
 
 ## Setup
 
-Set a run directory inside the write parent first, e.g.
-`RUN=~/projects/.gpt-runs/<short-task-slug>`, and use it for every
+Set a run directory inside the write parent named on the `WRITE_PARENTS`
+line of `~/.claude/scripts/codex-agent.sh` (default `~/projects`):
+`RUN=<that folder>/.gpt-runs/<short-task-slug>`, and use it for every
 `--outdir` in this task so prompts, answers and transcripts stay together.
 
 ## Patterns
@@ -53,28 +56,27 @@ the failure mode I've missed". A GPT agent that just validates your work has
 told you nothing you didn't already believe.
 
 **Fan-out** (`/gpt fan ...`) — N independent agents on N slices of the work,
-run concurrently, then synthesise. Write each prompt file first, launch them
-each as its own command (not a `for` loop) in the background, and wait:
-the Bash allow rule for the wrapper is a literal prefix match on the command
-string, and a `for ... do ~/.claude/scripts/codex-agent.sh ...; done` loop
-does not match `Bash(~/.claude/scripts/codex-agent.sh:*)`, so it would need a
-fresh permission prompt per agent instead of running unattended.
+run concurrently, then synthesise. Write each prompt file first. Every Bash
+call you make is a separate shell, so `&` plus a trailing `wait` inside one
+call is not reliable, and neither is a `for` loop (the Bash allow rule for
+the wrapper is a literal prefix match on the command string, and a
+`for ... do ~/.claude/scripts/codex-agent.sh ...; done` loop does not match
+`Bash(~/.claude/scripts/codex-agent.sh:*)`). Instead, launch each agent as
+its own background Bash call - the harness tells you when each one finishes
+- with a literal run directory in every call rather than a `$RUN` variable
+carried over from an earlier call:
 
 ```
 ~/.claude/scripts/codex-agent.sh \
-  --label a --outdir "$RUN" --cd <dir> --model gpt-5.6-luna --effort low \
-  --prompt-file "$RUN/a.prompt.md" \
-  >"$RUN/a.stdout" 2>"$RUN/a.stderr" &
-~/.claude/scripts/codex-agent.sh \
-  --label b --outdir "$RUN" --cd <dir> --model gpt-5.6-luna --effort low \
-  --prompt-file "$RUN/b.prompt.md" \
-  >"$RUN/b.stdout" 2>"$RUN/b.stderr" &
-~/.claude/scripts/codex-agent.sh \
-  --label c --outdir "$RUN" --cd <dir> --model gpt-5.6-luna --effort low \
-  --prompt-file "$RUN/c.prompt.md" \
-  >"$RUN/c.stdout" 2>"$RUN/c.stderr" &
-wait
+  --label a --outdir "<RUN>" --cd <dir> --model gpt-5.6-luna --effort low \
+  --prompt-file "<RUN>/a.prompt.md" \
+  >"<RUN>/a.stdout" 2>"<RUN>/a.stderr"
 ```
+
+Launch that one as its own background Bash call, then repeat for `b`, `c`,
+... as fresh background calls with the same literal `<RUN>` path each time.
+Do not rely on `wait` - it only works within a single shell - or on any
+variable from an earlier call; then read the answer files.
 
 Then read each `$RUN/<label>.answer.md`. Keep fan-out to a handful of agents
 unless the user asked for scale — these draw on the user's ChatGPT plan's Codex quota.
@@ -100,10 +102,9 @@ at `high` for opinions and reviews (a reviewer is never below `high`),
 `gpt-5.6-luna` or `gpt-5.6-terra` at `low` for mechanical slices - and when
 the user has asked for the top tier, pass `--model gpt-6-astra` explicitly -
 leaving it unflagged is not a way to request it, since a failover to another
-account would serve that account's default. Note that `gpt-6-astra` needs a
-recent Codex CLI: on 2026-09-15 codex-cli 0.149.1 was refused by the API
-("requires a newer version of Codex"). If that happens, upgrade the CLI
-(`brew upgrade codex`) and re-try; until then pin a 5.6 model on every run.
+account would serve that account's default. Older Codex CLIs refuse `gpt-6-astra` (seen with codex-cli 0.149.1 on
+2026-09-15: "requires a newer version of Codex"); if that happens, `brew
+upgrade --cask codex` and re-try; until then pin a 5.6 model on every run.
 Read the run header for the served account and model. The CLAUDE.md cost rule
 says raising a tier needs the user's say-so. If the user names a depth or speed
 preference in their request —

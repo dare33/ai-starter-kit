@@ -24,7 +24,7 @@ This folder contains a system of companion prompts for creating and maintaining 
 
 ## How they interact
 
-**At creation:** I paste the kickoff prompt with the plan. The agent reads both companion prompts, derives the project profile, and presents **one combined proposal** — modules in/out with reasons, plus the proposed security tier with rubric justification. I confirm (the tier can change the module list). The agent then scaffolds, initializes git with a private remote, registers the project in `PROJECTS.md`, transcribes the durable rules into the repo, and finishes with **one combined handoff report**. Ownership is split cleanly: the structure prompt owns files and workflow; the security prompt owns all security and privacy controls.
+**At creation:** I paste the kickoff prompt with the plan. The agent reads both companion prompts, derives the project profile, and presents **one combined proposal** — modules in/out with reasons, plus the proposed security tier with rubric justification. I confirm (the tier can change the module list). The agent then scaffolds, initializes git with a private remote (or local-only when no GitHub account is set up), registers the project in `PROJECTS.md`, transcribes the durable rules into the repo, and finishes with **one combined handoff report**. Ownership is split cleanly: the structure prompt owns files and workflow; the security prompt owns all security and privacy controls.
 
 **During builds:** each project is self-governing. Sessions start from the project's `PROMPT.md` (volatile handoff), consult `CLAUDE.md`/`AGENTS.md` for rules, and end by updating `CHANGELOG.md` and rewriting `PROMPT.md` (mutating sessions only — read-only sessions leave it untouched). New work passes the plan-first approval gate before build starts. The confirmed tier's controls live as a checklist in `SECURITY.md`; per-release controls sit in the `AGENTS.md` release checklist. Medium+ projects get code review at each feature completion. Hot docs (`PLAN.md`, `SECURITY.md`, `CHANGELOG.md`, `PROMPT.md`) carry concrete size ceilings with archival destinations, so they stay cheap to retrieve.
 
@@ -43,6 +43,6 @@ kickoff ──► structure + security ──► scaffolded, registered project
 ## Conventions
 
 - **Versioning:** every prompt carries a `Version:` and `Last updated:` line, bumped on any edit. Scaffolded projects record the versions they were built under in their `CLAUDE.md`, so the maintenance sweep can flag projects that predate material rule changes.
-- **No cloud-synced folders for repos** (decided 2026-07-04): projects live in plain local folders with private GitHub remotes. Cloud sync corrupts git repositories.
+- **No cloud-synced folders for repos** (decided 2026-07-04): projects live in plain local folders with private GitHub remotes (or local-only when no GitHub account is set up). Cloud sync corrupts git repositories.
 - **`PROJECTS.md` is owner-side** (decided 2026-07-04): the portfolio index is my personal infrastructure. Repos never reference it and collaborators never update it; in-repo docs (`SECURITY.md`, `CHANGELOG.md`) are the interface, and the maintenance sweep syncs the index from them. It lives outside the repos, not in this suite.
 - **Missing companion = stop.** Each prompt names its companions; if one wasn't provided, the agent asks rather than improvising.

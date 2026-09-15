@@ -33,6 +33,32 @@ case "$RAW_PROJECTS_DIR" in
   "~") RAW_PROJECTS_DIR="$HOME" ;;
   "~/"*) RAW_PROJECTS_DIR="$HOME/${RAW_PROJECTS_DIR#"~/"}" ;;
 esac
+
+# Character whitelist, checked before this value goes anywhere near the
+# shell script we write out later (the codex wrapper's WRITE_PARENTS line —
+# no character that could break out of a quoted string is let through.
+case "$RAW_PROJECTS_DIR" in
+  *[!A-Za-z0-9._/\ -]*)
+    warn "the projects folder path can only contain letters, numbers, spaces, and . _ - / (got $RAW_PROJECTS_DIR)"
+    exit 1
+    ;;
+esac
+
+# Reject the home folder itself, and validate containment on the
+# expanded-but-not-yet-resolved path, before creating anything — so a
+# rejected value never leaves a stray directory behind.
+if [ "$RAW_PROJECTS_DIR" = "$HOME" ]; then
+  warn "the projects folder must be a folder INSIDE your home folder, not the home folder itself (got $RAW_PROJECTS_DIR)"
+  exit 1
+fi
+case "$RAW_PROJECTS_DIR" in
+  "$HOME"/*) ;;
+  *)
+    warn "projects folder must be inside your home folder (got $RAW_PROJECTS_DIR)"
+    exit 1
+    ;;
+esac
+
 if ! mkdir -p "$RAW_PROJECTS_DIR"; then
   warn "could not create the projects folder at $RAW_PROJECTS_DIR"
   exit 1
@@ -41,6 +67,9 @@ if ! PROJECTS_DIR="$(cd "$RAW_PROJECTS_DIR" && pwd -P)"; then
   warn "could not resolve the projects folder at $RAW_PROJECTS_DIR"
   exit 1
 fi
+# Belt and braces: re-check containment on the resolved (symlink-following)
+# path too — a symlink could point outside home even though the unresolved
+# path looked fine above.
 case "$PROJECTS_DIR" in
   "$HOME"|"$HOME"/*) ;;
   *)
@@ -48,6 +77,10 @@ case "$PROJECTS_DIR" in
     exit 1
     ;;
 esac
+if [ "$PROJECTS_DIR" = "$HOME" ]; then
+  warn "the projects folder must be a folder INSIDE your home folder, not the home folder itself (got $PROJECTS_DIR)"
+  exit 1
+fi
 
 if [ "$(uname -s)" != "Darwin" ]; then
   warn "This kit's GPT wrapper (codex-agent.sh) is macOS-only. Everything else installs fine."
@@ -56,7 +89,55 @@ fi
 say "Installing into $CLAUDE_DIR"
 mkdir -p "$CLAUDE_DIR/agents" "$CLAUDE_DIR/commands" "$CLAUDE_DIR/scripts"
 
-# 1. Global CLAUDE.md — preserve an existing "## About me" section if present
+# 1. Permission rule so Claude Code may run the wrapper without prompting.
+# Done FIRST, before anything else is copied, so a malformed or
+# unexpected-shape settings.json is reported up front rather than after
+# the rest of the install has already run.
+SETTINGS="$CLAUDE_DIR/settings.json"
+RULE_ABS="Bash($HOME/.claude/scripts/codex-agent.sh:*)"
+RULE_TILDE="Bash(~/.claude/scripts/codex-agent.sh:*)"
+if [ ! -f "$SETTINGS" ]; then
+  sed "s|__HOME__|$HOME|" "$KIT/claude/settings-allow.json" > "$SETTINGS"
+  printf '    created settings.json with the wrapper allow rule\n'
+elif command -v python3 >/dev/null 2>&1; then
+  backup "$SETTINGS"
+  python3 - "$SETTINGS" "$RULE_ABS" "$RULE_TILDE" <<'PY'
+import json, sys
+path, *rules = sys.argv[1:]
+try:
+    with open(path) as f:
+        data = json.load(f)
+    if not isinstance(data, dict):
+        raise ValueError("settings.json is not a JSON object")
+    perms = data.setdefault("permissions", {})
+    if not isinstance(perms, dict):
+        raise ValueError("permissions is not a JSON object")
+    allow = perms.setdefault("allow", [])
+    if not isinstance(allow, list):
+        raise ValueError("permissions.allow is not a list")
+    changed = False
+    for r in rules:
+        if r not in allow:
+            allow.append(r)
+            changed = True
+    if changed:
+        with open(path, "w") as f:
+            json.dump(data, f, indent=2)
+            f.write("\n")
+        print("    merged the wrapper allow rule into settings.json")
+    else:
+        print("    wrapper allow rule already present in settings.json")
+except Exception:
+    print("    WARNING: ~/.claude/settings.json is not in a shape I can safely merge into (not valid JSON, or permissions/allow isn't the expected object/list); I did not change it. Add these two lines to permissions.allow by hand:")
+    for r in rules:
+        print(f'      "{r}"')
+PY
+else
+  warn "settings.json exists and python3 is missing. Add these two lines to permissions.allow by hand:"
+  printf '      "%s"\n      "%s"\n' "$RULE_ABS" "$RULE_TILDE"
+fi
+
+# 2. Global CLAUDE.md — preserve an existing "## About me" section if present
 backup "$CLAUDE_DIR/CLAUDE.md"
 if [ -f "$CLAUDE_DIR/CLAUDE.md" ] && head -n1 "$CLAUDE_DIR/CLAUDE.md" | grep -qx '## About me'; then
   ABOUT_ME="$(awk '/^# / {exit} {print}' "$CLAUDE_DIR/CLAUDE.md")"
@@ -68,23 +149,32 @@ else
 fi
 printf '    installed CLAUDE.md\n'
 
-# 2. Agent role files
+# 3. Agent role files
 for f in "$KIT"/claude/agents/*.md; do
   backup "$CLAUDE_DIR/agents/$(basename "$f")"
   cp "$f" "$CLAUDE_DIR/agents/"
 done
 printf '    installed agents: %s\n' "$(ls "$KIT/claude/agents" | tr '\n' ' ')"
 
-# 3. /gpt command
+# 4. /gpt command
 backup "$CLAUDE_DIR/commands/gpt.md"
 cp "$KIT/claude/commands/gpt.md" "$CLAUDE_DIR/commands/gpt.md"
 printf '    installed /gpt command\n'
 
-# 4. Codex wrapper, with the projects folder baked in. Build the replacement
+# 5. Codex wrapper, with the projects folder baked in. Build the replacement
 # line with python3 (or awk -v as a fallback) rather than sed, so a
 # PROJECTS_DIR containing sed-special characters (&, |, \) can't corrupt it.
 backup "$CLAUDE_DIR/scripts/codex-agent.sh"
 REL_PROJECTS="${PROJECTS_DIR#"$HOME"/}"
+# Belt and braces again: this should be unreachable given the checks above,
+# but if the relative path ever comes out absolute or unchanged, stop rather
+# than write a bad WRITE_PARENTS line into the installed wrapper.
+case "$REL_PROJECTS" in
+  /*|"$PROJECTS_DIR")
+    warn "could not compute a projects folder relative to your home folder (got $PROJECTS_DIR)"
+    exit 1
+    ;;
+esac
 if command -v python3 >/dev/null 2>&1; then
   python3 - "$KIT/claude/scripts/codex-agent.sh" "$CLAUDE_DIR/scripts/codex-agent.sh" "$REL_PROJECTS" <<'PY'
 import re, sys
@@ -110,45 +200,6 @@ grep -qF "WRITE_PARENTS=(\"\$REAL_HOME/$REL_PROJECTS\")" "$CLAUDE_DIR/scripts/co
   || warn "could not confirm the installed wrapper's WRITE_PARENTS line"
 printf '    installed codex-agent.sh (repos may be edited by GPT only under %s)\n' "$PROJECTS_DIR"
 
-# 5. Permission rule so Claude Code may run the wrapper without prompting
-SETTINGS="$CLAUDE_DIR/settings.json"
-RULE_ABS="Bash($HOME/.claude/scripts/codex-agent.sh:*)"
-RULE_TILDE="Bash(~/.claude/scripts/codex-agent.sh:*)"
-if [ ! -f "$SETTINGS" ]; then
-  sed "s|__HOME__|$HOME|" "$KIT/claude/settings-allow.json" > "$SETTINGS"
-  printf '    created settings.json with the wrapper allow rule\n'
-elif command -v python3 >/dev/null 2>&1; then
-  backup "$SETTINGS"
-  python3 - "$SETTINGS" "$RULE_ABS" "$RULE_TILDE" <<'PY'
-import json, sys
-path, *rules = sys.argv[1:]
-try:
-    with open(path) as f:
-        data = json.load(f)
-except (json.JSONDecodeError, ValueError):
-    print("    WARNING: ~/.claude/settings.json is not valid JSON; I did not change it. Add these two lines to permissions.allow by hand:")
-    for r in rules:
-        print(f'      "{r}"')
-    sys.exit(0)
-allow = data.setdefault("permissions", {}).setdefault("allow", [])
-changed = False
-for r in rules:
-    if r not in allow:
-        allow.append(r)
-        changed = True
-if changed:
-    with open(path, "w") as f:
-        json.dump(data, f, indent=2)
-        f.write("\n")
-    print("    merged the wrapper allow rule into settings.json")
-else:
-    print("    wrapper allow rule already present in settings.json")
-PY
-else
-  warn "settings.json exists and python3 is missing. Add these two lines to permissions.allow by hand:"
-  printf '      "%s"\n      "%s"\n' "$RULE_ABS" "$RULE_TILDE"
-fi
-
 # 6. Codex CLI check (for the GPT side) — trusted, absolute locations only;
 # `command -v codex` would also accept a codex earlier on PATH that the
 # wrapper itself would refuse to run.
@@ -162,13 +213,18 @@ if [ -n "$CODEX_BIN" ]; then
   if [ -f "$HOME/.codex/auth.json" ]; then
     printf '    codex is logged in\n'
   else
-    warn "codex is not logged in yet. Run: codex login   (needs a ChatGPT Plus or Pro plan)"
+    warn "codex is not logged in yet. Run: codex login   (a paid ChatGPT plan gives more usage; if it says your plan doesn't include Codex, that's fine — skip it)"
   fi
 else
   warn "codex CLI not found. GPT is optional: only /gpt and reviewer-gpt need it. Install with: brew install --cask codex   then: codex login"
   printf '    Claude Code works without it.\n'
 fi
 
-say "Done. Open a new Claude Code session and type:  /gpt what does this folder contain?"
+say "Done."
+if [ -n "$CODEX_BIN" ]; then
+  printf '    Open a new Claude Code session and type:  /gpt what does this folder contain?\n'
+else
+  printf '    GPT is not set up (optional); everything else is ready.\n'
+fi
 printf '    Prompt suites are in %s/suites — see GETTING-STARTED.md for how to use them.\n' "$KIT"
 printf '    Backups of anything replaced (if any) are in %s\n' "$BACKUP_DIR"

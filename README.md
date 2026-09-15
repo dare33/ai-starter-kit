@@ -29,12 +29,15 @@ suites/
 
 - macOS (v1), your own Mac with an administrator account (the default for a
   personal Mac). The wrapper uses BSD `stat` and trusts codex only at
-  `/opt/homebrew/bin` or `/usr/local/bin`. Windows is not supported yet; ask
-  the person who sent you the kit if you need it.
+  `/opt/homebrew/bin` or `/usr/local/bin`. An Apple-silicon Mac for the GPT
+  add-on (any Mac for the rest) — the official Homebrew installer refuses to
+  run on an Intel Mac. Windows is not supported yet; ask the person who sent
+  you the kit if you need it.
 - Claude Code (Pro or Max plan). Codex CLI via `brew install --cask codex`
-  plus a ChatGPT Plus/Pro login for the GPT roles; without it the `/gpt`
-  command and `reviewer-gpt` report "unavailable" and everything else still
-  works.
+  plus a ChatGPT login for the GPT roles — a paid plan gives more usage, and
+  if the login says your plan doesn't include Codex, skip it; without it the
+  `/gpt` command and `reviewer-gpt` report "unavailable" and everything else
+  still works.
 
 ## Updating
 

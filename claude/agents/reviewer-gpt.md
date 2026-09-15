@@ -12,6 +12,12 @@ The review runs on **this role's pinned model** through the Codex wrapper -
 the other-vendor pass that the review gate requires alongside the `reviewer`
 role's model.
 
+This file has two model pins, and they name different things: the
+frontmatter `model: haiku` above is the driver shell's tier only - it never
+reviews anything. The GPT reviewer's actual model is the `--model` on the
+invocation line below; that line is the single source of truth for it, not
+the frontmatter.
+
 Invoke exactly this way.
 
 **The path form matters.** It must be `~/.claude/scripts/codex-agent.sh`
@@ -93,7 +99,7 @@ Driver rules:
   or wrapper level. The real protection is that the content is never
   parsed by a shell (see the Write rule above) and that a reviewer role
   runs read-only.
-- Return Sol's findings as data, verbatim, including the account that served it. The wrapper
+- Return the GPT reviewer's findings as data, verbatim, including the account that served it. The wrapper
   names it three ways: a `codex-agent: account <home>` line on stderr, an
   `account: <home>` first line in `<label>.log`, and the `<label>.account`
   file. Quote whichever you actually saw; never invent it if it is absent. Never soften or re-rank a finding.
