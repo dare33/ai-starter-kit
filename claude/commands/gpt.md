@@ -39,6 +39,10 @@ Choose a run directory once, using the write parent named on the
 `--outdir` and file reference below - never carry it as a shell variable:
 each Bash call you make is a separate shell, so a variable set in one call
 is gone in the next.
+(In the examples the quoted form is `"$HOME/projects/..."` — a `~` inside double
+quotes does not expand, so either write `$HOME` or the full `/Users/<name>/...`
+path.)
+
 
 ## Patterns
 
@@ -47,9 +51,9 @@ agent, read-only, pointed at the relevant files:
 
 ```
 ~/.claude/scripts/codex-agent.sh \
-  --label opinion --outdir "~/projects/.gpt-runs/<short-task-slug>" --cd <repo-or-folder> \
+  --label opinion --outdir "$HOME/projects/.gpt-runs/<short-task-slug>" --cd <repo-or-folder> \
   --model gpt-5.6-sol --effort high \
-  --prompt-file "~/projects/.gpt-runs/<short-task-slug>/opinion.prompt.md"
+  --prompt-file "$HOME/projects/.gpt-runs/<short-task-slug>/opinion.prompt.md"
 ```
 
 **Adversarial review** (`/gpt review ...`) — ask it to find what's wrong, not
@@ -71,9 +75,9 @@ never a `$RUN` variable carried over from an earlier call:
 
 ```
 ~/.claude/scripts/codex-agent.sh \
-  --label a --outdir "~/projects/.gpt-runs/<short-task-slug>" --cd <dir> --model gpt-5.6-luna --effort low \
-  --prompt-file "~/projects/.gpt-runs/<short-task-slug>/a.prompt.md" \
-  >"~/projects/.gpt-runs/<short-task-slug>/a.stdout" 2>"~/projects/.gpt-runs/<short-task-slug>/a.stderr"
+  --label a --outdir "$HOME/projects/.gpt-runs/<short-task-slug>" --cd <dir> --model gpt-5.6-luna --effort low \
+  --prompt-file "$HOME/projects/.gpt-runs/<short-task-slug>/a.prompt.md" \
+  >"$HOME/projects/.gpt-runs/<short-task-slug>/a.stdout" 2>"$HOME/projects/.gpt-runs/<short-task-slug>/a.stderr"
 ```
 
 Launch that one as its own background Bash call, then repeat for `b`, `c`,

@@ -129,6 +129,7 @@ elif command -v python3 >/dev/null 2>&1; then
   python3 - "$SETTINGS" "$RULE_ABS" "$RULE_TILDE" <<'PY'
 import json, os, sys
 path, *rules = sys.argv[1:]
+path = os.path.realpath(path)  # write through a symlink, never replace the link itself
 tmp = None
 try:
     with open(path) as f:
@@ -157,6 +158,8 @@ try:
             f.write("\n")
         with open(tmp) as f:
             json.load(f)
+        mode = os.stat(path).st_mode & 0o777
+        os.chmod(tmp, mode)  # keep the original file mode (e.g. 0600)
         os.replace(tmp, path)
         print("    merged the wrapper allow rule into settings.json")
     else:
@@ -172,7 +175,7 @@ except Exception:
         print(f'      "{r}"')
 PY
 else
-  warn "settings.json exists and python3 is missing. Add these two lines to permissions.allow by hand:"
+  warn "settings.json exists and python3 is missing, so I could not merge the allow rule; the setup assistant will add these two lines to permissions.allow for you:"
   printf '      "%s"\n      "%s"\n' "$RULE_ABS" "$RULE_TILDE"
 fi
 

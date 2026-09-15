@@ -116,7 +116,7 @@ Codex access — if their login later says it doesn't, that's fine, skip it
   set up' sentence from ~/.claude/CLAUDE.md*."
 - **Yes, but Phase 1 found an Intel Mac with no Homebrew already present:**
   tell them plainly: "This Mac is an older Intel model; the GPT add-on can't
-  be installed automatically on it, everything else works." Go straight to
+  be installed automatically on it; the rest of the install will carry on." Go straight to
   Phase 5.
 - **Yes, and Apple silicon (or Homebrew already present):** continue below.
 
@@ -131,8 +131,8 @@ installer, confirm this account can install software:
 `dscl . -read /Groups/admin GroupMembership | grep -qw "$USER"`. If that
 fails, **do not stop the whole install** — this only blocks the GPT add-on.
 Tell them: "Installing Homebrew needs an administrator account on this Mac,
-and this account isn't one, so I can't set up the GPT add-on. Everything
-else still works." Mark GPT as not set up (Phase 7 records this) and go
+and this account isn't one, so I can't set up the GPT add-on. The rest of
+the install will carry on." Mark GPT as not set up (Phase 7 records this) and go
 straight to Phase 5.
 
 Otherwise its installer needs the person's Mac password, which you cannot
@@ -174,7 +174,8 @@ Once brew exists, make it available in future shells (idempotent) — re-derive
 `$BREW` with the one-liner above first, since this is a fresh Bash call:
 
 ```bash
-grep -q 'brew shellenv' ~/.zprofile 2>/dev/null || echo "eval \"\$($BREW shellenv)\"" >> ~/.zprofile
+BREW=/opt/homebrew/bin/brew; [ -x "$BREW" ] || BREW=/usr/local/bin/brew
+[ -x "$BREW" ] && { grep -q 'brew shellenv' ~/.zprofile 2>/dev/null || echo "eval \"\$($BREW shellenv)\"" >> ~/.zprofile; }
 ```
 
 If this write is refused, say so and carry on — the kit itself never depends
@@ -184,8 +185,9 @@ on PATH.
 
 (Only reached if Phase 2's answer was Yes and Homebrew is available.)
 
-Re-derive `$BREW` first (fresh Bash call):
-`BREW=/opt/homebrew/bin/brew; [ -x "$BREW" ] || BREW=/usr/local/bin/brew;`
+Every fenced block in this phase starts by re-deriving `$BREW`, because
+each block is its own Bash call and the variable does not survive between
+them.
 
 Homebrew ships `codex` as a cask, not a formula, and a cask install can pop
 up a macOS password prompt — install it the Phase 2 way from the start, in a
@@ -195,6 +197,7 @@ Remove any marker left by an earlier attempt first, so a stale one is never
 read as this attempt's result:
 
 ```bash
+BREW=/opt/homebrew/bin/brew; [ -x "$BREW" ] || BREW=/usr/local/bin/brew
 rm -f ~/ai-starter-kit/.setup/codex.exit
 osascript -e 'tell application "Terminal" to activate' -e "tell application \"Terminal\" to do script \"$BREW install --cask codex; echo \$? > ~/ai-starter-kit/.setup/codex.exit\""
 ```
@@ -212,7 +215,7 @@ retry later. Only `0` means continue.
 
 Once it finishes, confirm with the absolute path — the running session's
 PATH doesn't include a Homebrew cask that was installed moments ago:
-`$(dirname "$BREW")/codex --version` should print a version. If it doesn't,
+`BREW=/opt/homebrew/bin/brew; [ -x "$BREW" ] || BREW=/usr/local/bin/brew; $(dirname "$BREW")/codex --version` (one call) should print a version. If it doesn't,
 treat that the same as a non-zero marker above: mark GPT as not set up and
 continue to Phase 5 rather than stopping.
 
@@ -253,7 +256,8 @@ minutes"):
 install.** Tell them plainly "GPT is not set up yet, but the rest of the
 install will carry on" (say "everything else works" only later, after Phase
 5 has actually run) and give them the recovery line: "paste: *Run Phase 4 of
-~/ai-starter-kit/SETUP-AGENT.md, then Phase 6*." Mark GPT as not set up and
+~/ai-starter-kit/SETUP-AGENT.md, then Phase 6*" (Phase 6 removes the
+'GPT is not set up' sentence once the probe passes). Mark GPT as not set up and
 continue straight to Phase 5. Do not try to capture or parse the Terminal
 window's other output — the two files above are the only signals you need.
 
@@ -291,7 +295,11 @@ that's missing (this is the malformed-settings case from Phase 5), that is
 yours to fix, not theirs. Open `~/.claude/settings.json` with the file-edit
 tool and add the two rules install.sh printed in its WARNING to the
 `permissions.allow` list yourself (creating `permissions`/`allow` if either
-is missing), then re-check 2 before moving on.
+is missing), then confirm the file parses —
+`python3 -m json.tool ~/.claude/settings.json >/dev/null` prints nothing —
+and re-check 2 before moving on. A settings file that does not parse is
+ignored by Claude Code entirely, which would make every `/gpt` call ask for
+permission forever.
 
 4. If Phase 4 was done, run one probe (Claude Code may ask them to allow this
    command once; that's expected — tell them to click Allow). Run this as a
@@ -320,6 +328,9 @@ esac
    Expect `PROBE OK`. If it says "all accounts exhausted or parked", the
    ChatGPT plan is out of Codex quota right now; that is not an install
    failure — note it and move on. Any other error: stop and explain.
+5. If the probe returned `PROBE OK` and `~/.claude/CLAUDE.md` contains the
+   sentence "GPT is not set up on this machine yet" (from an earlier Phase 7),
+   remove that sentence with the file-edit tool and say so — GPT is now set up.
 
 ## Phase 7 — Personalise their rules
 
@@ -370,8 +381,9 @@ backup copy needed: install.sh already backed up the shipped file under
   "American spelling". Then verify with
   `grep -rc "Australian spelling" ~/.claude/CLAUDE.md ~/.claude/agents/` that
   none remain, and report to them how many instances you changed.
-- If GPT was not set up (Phase 2's admin check, Phase 2's or Phase 3's
-  Terminal step, or Phase 4's login didn't complete), add one sentence under
+- If GPT was not set up for any reason (they said No or Not sure, an Intel
+  Mac, the admin check, a Terminal step, or a login that didn't complete),
+  add one sentence under
   "The review gate" — but check it isn't already there first, so re-running
   this phase never duplicates it: "GPT is not set up on this machine yet;
   report the reviewer-gpt pass as OUTSTANDING and say so plainly, until
@@ -417,4 +429,5 @@ paste: *Run Phases 2 to 4 of ~/ai-starter-kit/SETUP-AGENT.md, then Phase 6,
 and remove the 'GPT is not set up' sentence from ~/.claude/CLAUDE.md*" if
 Homebrew was never installed, or just *Run Phase 4 of
 ~/ai-starter-kit/SETUP-AGENT.md, then Phase 6* if Homebrew and the Codex CLI
-are already installed and only the login timed out.
+are already installed and only the login timed out (Phase 6 removes the
+sentence itself once the probe passes).
