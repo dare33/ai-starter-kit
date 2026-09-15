@@ -26,6 +26,9 @@ Ground rules for this whole job:
   reliably survive into the next call. Re-derive anything you need (e.g.
   `$BREW`) at the start of each call that needs it, or read it back from a
   file under `~/ai-starter-kit/.setup/` instead of carrying it in memory.
+- **A poll is many short Bash calls**, e.g. `sleep 30; test -f <file>`, one
+  per check, counted by you — never one long loop inside a single call,
+  which the harness would time out.
 
 Work through the phases in order. Phase 0 is background for you to know, not
 an action step — read it, don't announce it. Say "Phase N of 8: …" as you
@@ -93,8 +96,8 @@ Also expect:
    print `arm64` and neither `/opt/homebrew/bin/brew` nor
    `/usr/local/bin/brew` exists yet, remember this (don't tell them yet) —
    Phase 2 uses it to skip GPT setup on an Intel Mac with no Homebrew
-   already installed, since the official Homebrew installer refuses to run
-   there (verified 2026-09-15, installer line 158).
+   already installed, since the official installer refuses macOS on
+   anything but Apple silicon (checked 2026-09-15).
 
 ## Phase 2 — Homebrew and the GPT question (the Mac package manager)
 
@@ -126,17 +129,22 @@ Check `$BREW --version`. If it works, skip to Phase 3.
 If neither path exists, Homebrew must be installed. Before opening the
 installer, confirm this account can install software:
 `dscl . -read /Groups/admin GroupMembership | grep -qw "$USER"`. If that
-fails, stop and say: "Installing Homebrew needs an administrator account on
-this Mac, and this account isn't one. Everything except the `/gpt` command
-still works without it — want me to carry on with just that?"
+fails, **do not stop the whole install** — this only blocks the GPT add-on.
+Tell them: "Installing Homebrew needs an administrator account on this Mac,
+and this account isn't one, so I can't set up the GPT add-on. Everything
+else still works." Mark GPT as not set up (Phase 7 records this) and go
+straight to Phase 5.
 
 Otherwise its installer needs the person's Mac password, which you cannot
-and must not type. Open a Terminal window running the official installer for
-them, and have that same window record its own exit code to a file — so you
-can poll for a file instead of a guess about when it's done (the outer shell
-uses single quotes, the AppleScript string uses `\"` for the inner ones):
+and must not type. Remove any marker left by an earlier attempt first, so a
+stale one is never mistaken for this attempt's result, then open a Terminal
+window running the official installer for them, and have that same window
+record its own exit code to a file — so you can poll for a file instead of a
+guess about when it's done (the outer shell uses single quotes, the
+AppleScript string uses `\"` for the inner ones):
 
 ```bash
+rm -f ~/ai-starter-kit/.setup/brew.exit
 osascript -e 'tell application "Terminal" to activate' -e 'tell application "Terminal" to do script "/bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\"; echo $? > ~/ai-starter-kit/.setup/brew.exit"'
 ```
 
@@ -152,12 +160,15 @@ them: "A Terminal window has opened. It will ask for your Mac login
 password. Type it (nothing appears on screen while you type, that's normal)
 and press Return. Then press Return again when it says 'Press RETURN to
 continue'. Come back here when it says 'Installation successful'." Poll for
-`~/ai-starter-kit/.setup/brew.exit` every 30 seconds. Every 2 minutes, tell
-them "Still waiting for Homebrew, N minutes" — and if you reach 20 minutes
-without that file appearing, stop and say plainly that Homebrew hasn't
-finished, and ask what they see in the Terminal window. When the file
-appears: `0` means continue; anything else means stop and show them the
-last lines of the Terminal output they can see.
+`~/ai-starter-kit/.setup/brew.exit` every 30 seconds, with a progress line
+every 2 minutes ("Still waiting for Homebrew, N minutes"), up to a 20-minute
+cap. If 20 minutes pass with no file, or the file appears with anything
+other than `0`: **do not stop the whole install** — tell them plainly that
+Homebrew didn't finish (showing the last lines of Terminal output they can
+see, if the file appeared with a non-zero code), mark GPT as not set up, and
+continue straight to Phase 5. Give them the recovery line from the "No, or
+Not sure" branch above so they can retry later. Only `0` in the marker file
+means continue on to install the Codex CLI in Phase 3.
 
 Once brew exists, make it available in future shells (idempotent) — re-derive
 `$BREW` with the one-liner above first, since this is a fresh Bash call:
@@ -166,6 +177,9 @@ Once brew exists, make it available in future shells (idempotent) — re-derive
 grep -q 'brew shellenv' ~/.zprofile 2>/dev/null || echo "eval \"\$($BREW shellenv)\"" >> ~/.zprofile
 ```
 
+If this write is refused, say so and carry on — the kit itself never depends
+on PATH.
+
 ## Phase 3 — Install the Codex CLI (the GPT side)
 
 (Only reached if Phase 2's answer was Yes and Homebrew is available.)
@@ -173,16 +187,34 @@ grep -q 'brew shellenv' ~/.zprofile 2>/dev/null || echo "eval \"\$($BREW shellen
 Re-derive `$BREW` first (fresh Bash call):
 `BREW=/opt/homebrew/bin/brew; [ -x "$BREW" ] || BREW=/usr/local/bin/brew;`
 
-Homebrew ships `codex` as a cask, not a formula: run `$BREW install --cask
-codex`. A cask install can pop up a macOS password prompt even outside a
-Terminal; if brew asks for a password in your own command's output, open the
-same install in a Terminal window the way Phase 2 does (`osascript ... do
-script "$BREW install --cask codex"`) and tell them to type their password
-there.
+Homebrew ships `codex` as a cask, not a formula, and a cask install can pop
+up a macOS password prompt — install it the Phase 2 way from the start, in a
+Terminal window that records its own exit code to a marker file, since the
+first cask install can take longer than a single tool call's timeout allows.
+Remove any marker left by an earlier attempt first, so a stale one is never
+read as this attempt's result:
+
+```bash
+rm -f ~/ai-starter-kit/.setup/codex.exit
+osascript -e 'tell application "Terminal" to activate' -e "tell application \"Terminal\" to do script \"$BREW install --cask codex; echo \$? > ~/ai-starter-kit/.setup/codex.exit\""
+```
+
+Tell them: "A Terminal window has opened to install the GPT add-on; it may
+ask for your Mac password again, the same as a moment ago." Poll for
+`~/ai-starter-kit/.setup/codex.exit` every 30 seconds (S1 style — one short
+Bash call per check), with a progress line every 2 minutes ("Still waiting
+for the GPT add-on, N minutes"), up to a 15-minute cap. If 15 minutes pass
+with no file, or the file appears with anything other than `0`: **do not
+stop the whole install** — tell them plainly the GPT add-on didn't finish
+installing, mark GPT as not set up, and continue straight to Phase 5. Give
+them the recovery line from Phase 2's "No, or Not sure" branch so they can
+retry later. Only `0` means continue.
 
 Once it finishes, confirm with the absolute path — the running session's
-PATH doesn't include a Homebrew that was installed moments ago:
-`$(dirname "$BREW")/codex --version` should print a version.
+PATH doesn't include a Homebrew cask that was installed moments ago:
+`$(dirname "$BREW")/codex --version` should print a version. If it doesn't,
+treat that the same as a non-zero marker above: mark GPT as not set up and
+continue to Phase 5 rather than stopping.
 
 ## Phase 4 — Log in to ChatGPT for Codex
 
@@ -196,24 +228,34 @@ flag, but plain `codex login` in a real Terminal is the documented local-Mac
 path and needs a live process with a real TTY), and not a backgrounded
 process inside this Bash call either — a background job here can be reaped
 the moment this call returns, and there is no output for you to capture in
-any case. Re-derive `$BREW` first:
+any case. Re-derive `$BREW` first, and remove any marker left by an earlier
+attempt so a stale one can never be read as this attempt's result:
 
 ```bash
+rm -f ~/ai-starter-kit/.setup/codex-login.exit
 BREW=/opt/homebrew/bin/brew; [ -x "$BREW" ] || BREW=/usr/local/bin/brew
-osascript -e 'tell application "Terminal" to activate' -e "tell application \"Terminal\" to do script \"$(dirname "$BREW")/codex login\""
+osascript -e 'tell application "Terminal" to activate' -e "tell application \"Terminal\" to do script \"$(dirname "$BREW")/codex login; echo \$? > ~/ai-starter-kit/.setup/codex-login.exit\""
 ```
 
 Tell them: "A Terminal window has opened, and a browser page will open to log
 in to ChatGPT. Log in with the account you want Claude to use, then come back
-here." Poll for `~/.codex/auth.json` every 15 seconds for up to 10 minutes,
-with a progress line every 2 minutes ("Still waiting for the ChatGPT login,
-N minutes").
+here." Poll every 15 seconds, for up to 10 minutes, for **either** file, with
+a progress line every 2 minutes ("Still waiting for the ChatGPT login, N
+minutes"):
 
-If 10 minutes pass with no `~/.codex/auth.json`: stop, tell them plainly
-"GPT is not set up, but everything else works," and give them the recovery
-line: "paste: *Run Phase 4 of ~/ai-starter-kit/SETUP-AGENT.md, then Phase
-6*." Do not try to capture or parse the Terminal window's output for this
-step — the auth file appearing is the only signal you need.
+- `~/.codex/auth.json` appears — success, go to Phase 5.
+- `~/ai-starter-kit/.setup/codex-login.exit` appears first, with no
+  `auth.json`: the login process has already ended without completing (a
+  non-zero code, or `0` from a closed window) — stop polling immediately
+  rather than waiting out the rest of the 10 minutes.
+
+**In neither of the two "no auth.json" cases above do you stop the whole
+install.** Tell them plainly "GPT is not set up yet, but the rest of the
+install will carry on" (say "everything else works" only later, after Phase
+5 has actually run) and give them the recovery line: "paste: *Run Phase 4 of
+~/ai-starter-kit/SETUP-AGENT.md, then Phase 6*." Mark GPT as not set up and
+continue straight to Phase 5. Do not try to capture or parse the Terminal
+window's other output — the two files above are the only signals you need.
 
 ## Phase 5 — Install the kit
 
@@ -226,15 +268,15 @@ cd ~/ai-starter-kit && ./install.sh
 Expect the sandbox to refuse this the first time, because it writes under
 `~/.claude` (Phase 0(b)). Ask for the one unsandboxed retry, using the exact
 sentence from Phase 0, then allow it. Note for them: re-running `install.sh`
-later never loses anything they've personalised — it keeps their "About me"
-section if one already exists; the rest of the rules file is replaced, so
-Phase 7 re-applies its other edits afterwards.
+keeps the About me section; Phase 7 re-applies the other personal edits.
 
 Read its output. Any line starting with `WARNING` is something to read out
 in plain words. Two are expected and not failures: "not logged in" if Phase 4
 was skipped or timed out, and "codex CLI not found" if Phase 2's answer was
 No, Not sure, or an Intel Mac with no Homebrew — say so plainly rather than
-treating either as something gone wrong.
+treating either as something gone wrong. A third — the malformed-settings
+WARNING about `~/.claude/settings.json` — is not something to just read out:
+it is your job to repair it yourself in Phase 6, check 2.
 
 ## Phase 6 — Verify
 
@@ -242,6 +284,15 @@ treating either as something gone wrong.
 2. `~/.claude/settings.json` contains a line with `codex-agent.sh` under
    `permissions.allow`.
 3. `~/.claude/CLAUDE.md` and five files in `~/.claude/agents/` exist.
+
+If any of checks 1–3 fails, stop and say plainly, in your own words, which
+one failed and what that means — except check 2: if it's the allow rule
+that's missing (this is the malformed-settings case from Phase 5), that is
+yours to fix, not theirs. Open `~/.claude/settings.json` with the file-edit
+tool and add the two rules install.sh printed in its WARNING to the
+`permissions.allow` list yourself (creating `permissions`/`allow` if either
+is missing), then re-check 2 before moving on.
+
 4. If Phase 4 was done, run one probe (Claude Code may ask them to allow this
    command once; that's expected — tell them to click Allow). Run this as a
    **single** Bash call — deriving the projects folder and calling the
@@ -312,15 +363,21 @@ backup copy needed: install.sh already backed up the shipped file under
 - Write their answers as three to six plain sentences. If they are not
   coders, say so explicitly: Claude should explain terms, avoid jargon, and
   prefer plain-English summaries.
-- If they chose American spelling, change every "British/Australian
-  spelling" instruction in the file to "American spelling".
-- If Phase 4 was skipped or timed out, add one sentence under "The review
-  gate" — but check it isn't already there first, so re-running this phase
-  never duplicates it: "GPT is not set up on this machine yet; report the
-  reviewer-gpt pass as OUTSTANDING and say so plainly, until `codex login`
-  has been run." If you're re-running this phase after GPT has since been
-  set up, remove that sentence instead (Phase 2's "add GPT later" recipe
-  says to do this).
+- If they chose American spelling: search for the words "Australian
+  spelling" (that exact word pair — the phrase around it wraps across two
+  lines, so search for just those two words) in `~/.claude/CLAUDE.md` **and**
+  in each of the five files in `~/.claude/agents/`, and change each match to
+  "American spelling". Then verify with
+  `grep -rc "Australian spelling" ~/.claude/CLAUDE.md ~/.claude/agents/` that
+  none remain, and report to them how many instances you changed.
+- If GPT was not set up (Phase 2's admin check, Phase 2's or Phase 3's
+  Terminal step, or Phase 4's login didn't complete), add one sentence under
+  "The review gate" — but check it isn't already there first, so re-running
+  this phase never duplicates it: "GPT is not set up on this machine yet;
+  report the reviewer-gpt pass as OUTSTANDING and say so plainly, until
+  `codex login` has been run." If you're re-running this phase after GPT has
+  since been set up, remove that sentence instead (Phase 2's "add GPT later"
+  recipe says to do this).
 - If they chose "ask before every change", add one sentence under
   "Delivering work" saying so (again, only if not already present); it
   overrides the autonomy paragraph for them.
@@ -347,7 +404,7 @@ Tell them, in plain English:
    a second opinion from GPT" (if GPT is set up), "Open
    `~/ai-starter-kit/GETTING-STARTED.md` to start a real project with one of
    the prompt suites".
-4. Where the backups of anything replaced are:
+4. Backups (if any were taken) are under
    `~/.claude/backups/<date-and-time stamp>/`.
 5. If Phase 6's probe ran, where it wrote its files (`<their projects
    folder>/.gpt-runs/probe`), in case they want to look.

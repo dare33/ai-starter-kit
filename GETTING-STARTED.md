@@ -7,10 +7,10 @@ Claude, and two ready-made recipes for starting a project properly. Claude
 does the whole install for you. You never open a terminal yourself.
 
 You need a Mac, about 45 minutes, and a **Claude Pro or Max** subscription.
-Add an Apple-silicon Mac and a **ChatGPT** subscription for the optional GPT
-second-opinion part (any Mac works for everything else). A paid ChatGPT plan
-gives more usage; if it turns out your plan doesn't include Codex, that's
-fine — skip it and everything else still works.
+Add an Apple-silicon Mac and a ChatGPT account (paid plans give more usage)
+for the optional GPT second-opinion part (any Mac works for everything
+else); if it turns out your plan doesn't include Codex, that's fine — skip
+it and everything else still works.
 
 ## 1. Install the Claude app
 
@@ -38,7 +38,7 @@ control Terminal — click Allow both times. Three steps need something from you
 1. **Click Install** in a small window that pops up (Apple's developer tools).
 2. **Type your Mac password** into a Terminal window that Claude opens for
    you, then press Return. Nothing appears while you type; that's normal.
-3. **Log in to ChatGPT** in your browser, if you have a subscription.
+3. **Log in to ChatGPT** in your browser, if you have an account.
 
 Everything else it does itself. Read what it says; it will tell you plainly
 if anything went wrong and what it needs.

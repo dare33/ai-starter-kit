@@ -510,7 +510,7 @@ fi
 case "$SCHEMA" in -*) die "--schema path may not start with a dash (got '$SCHEMA')" ;; esac
 [ -z "$SCHEMA" ] || [ -f "$SCHEMA" ] || die "schema file not found: $SCHEMA"
 
-# Trusted-roots check (the owner's ruling 2026-08-13, ported from the Windows port): refuse
+# Trusted-roots check (the owner's ruling 2026-08-13, ported from the Windows build of this wrapper): refuse
 # a codex that resolves anywhere unexpected. HONEST SCOPE, and a deliberate
 # divergence from the win port flagged in the 2026-08-19 round-5 cross-vendor
 # review: this resolves codex via PATH (`command -v`) and trusts two fixed
@@ -747,7 +747,7 @@ run_codex_once() {
   # exclude_slash_tmp precisely to turn that off. That is a write root this
   # wrapper's containment guard never inspects: the guard only ever looked at
   # --cd, so a caller could pass a harmless --cd while pointing TEMP at
-  # ~/.claude, an account home and write there anyway.
+  # ~/.claude or an account home and write there anyway.
   # Found by the round-4 cross-vendor pass. Excluded unconditionally - this
   # wrapper never needs the agent writing outside its checked root.
   # v2.6: writable_roots pinned to empty for the same reason - an account

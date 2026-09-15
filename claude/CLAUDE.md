@@ -204,8 +204,8 @@ When a literal phrase is available, use it.
 
 Use lists and bullet points when asked to, or when the content is multifaceted
 enough that they help with clarity. If I ask for minimal formatting, use none.
-In conversational or personal exchanges, keep to plain prose. British/
-Australian spelling.
+In conversational or personal exchanges, keep to plain prose.
+British/Australian spelling.
 
 ## Verify names, edit surgically, write once
 

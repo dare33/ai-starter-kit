@@ -13,12 +13,14 @@ BACKUP_DIR="$CLAUDE_DIR/backups/$STAMP"
 
 say()  { printf '\n==> %s\n' "$1"; }
 warn() { printf '    WARNING: %s\n' "$1"; }
+ANY_BACKUP=0
 backup() {
   local src="$1" rel dst
   [ -e "$src" ] || return 0
   rel="${src#"$CLAUDE_DIR"/}"
   dst="$BACKUP_DIR/$rel"
   if mkdir -p "$(dirname "$dst")" && cp -p "$src" "$dst"; then
+    ANY_BACKUP=1
     printf '    backed up %s\n' "$src"
   else
     printf '    WARNING: could not back up %s; stopping before changing anything\n' "$src"
@@ -36,10 +38,27 @@ esac
 
 # Character whitelist, checked before this value goes anywhere near the
 # shell script we write out later (the codex wrapper's WRITE_PARENTS line —
-# no character that could break out of a quoted string is let through.
-case "$RAW_PROJECTS_DIR" in
-  *[!A-Za-z0-9._/\ -]*)
-    warn "the projects folder path can only contain letters, numbers, spaces, and . _ - / (got $RAW_PROJECTS_DIR)"
+# no character that could break out of a quoted string is let through. This
+# same whitelist is re-applied below to the resolved path and to
+# REL_PROJECTS, since a symlink can turn an innocent-looking value into one
+# that contains an unsafe character only after it is resolved.
+check_whitelist() {
+  case "$1" in
+    *[!A-Za-z0-9._/\ -]*)
+      warn "the projects folder path can only contain letters, numbers, spaces, and . _ - / (got $1)"
+      exit 1
+      ;;
+  esac
+}
+check_whitelist "$RAW_PROJECTS_DIR"
+
+# Reject a `..` path component outright, before any mkdir — the whitelist
+# above allows the `.` character (needed for names like "My.Projects"), so
+# `..` needs its own check, and it has to run before anything is created so
+# a rejected value can never leave a stray directory behind.
+case "/$RAW_PROJECTS_DIR/" in
+  */../*)
+    warn "the projects folder path cannot contain a .. component (got $RAW_PROJECTS_DIR)"
     exit 1
     ;;
 esac
@@ -67,6 +86,12 @@ if ! PROJECTS_DIR="$(cd "$RAW_PROJECTS_DIR" && pwd -P)"; then
   warn "could not resolve the projects folder at $RAW_PROJECTS_DIR"
   exit 1
 fi
+# Re-run the SAME character whitelist on the resolved (symlink-following)
+# path: a symlink such as ~/projects -> a folder named
+# `evil");echo INJECTED;#` passes the check above (it's checked before
+# resolution) but must still be refused once resolved, before it goes near
+# the wrapper we write out below.
+check_whitelist "$PROJECTS_DIR"
 # Belt and braces: re-check containment on the resolved (symlink-following)
 # path too — a symlink could point outside home even though the unresolved
 # path looked fine above.
@@ -102,8 +127,9 @@ if [ ! -f "$SETTINGS" ]; then
 elif command -v python3 >/dev/null 2>&1; then
   backup "$SETTINGS"
   python3 - "$SETTINGS" "$RULE_ABS" "$RULE_TILDE" <<'PY'
-import json, sys
+import json, os, sys
 path, *rules = sys.argv[1:]
+tmp = None
 try:
     with open(path) as f:
         data = json.load(f)
@@ -121,14 +147,27 @@ try:
             allow.append(r)
             changed = True
     if changed:
-        with open(path, "w") as f:
+        # Atomic write: build the new file next to the original, confirm it
+        # actually re-parses, then swap it in with a single rename — so a
+        # crash or a read-only folder midway through leaves the original
+        # byte-identical rather than half-written.
+        tmp = path + ".tmp"
+        with open(tmp, "w") as f:
             json.dump(data, f, indent=2)
             f.write("\n")
+        with open(tmp) as f:
+            json.load(f)
+        os.replace(tmp, path)
         print("    merged the wrapper allow rule into settings.json")
     else:
         print("    wrapper allow rule already present in settings.json")
 except Exception:
-    print("    WARNING: ~/.claude/settings.json is not in a shape I can safely merge into (not valid JSON, or permissions/allow isn't the expected object/list); I did not change it. Add these two lines to permissions.allow by hand:")
+    if tmp and os.path.exists(tmp):
+        try:
+            os.remove(tmp)
+        except Exception:
+            pass
+    print("    WARNING: ~/.claude/settings.json is not in a shape I can safely merge into (not valid JSON, or permissions/allow isn't the expected object/list), or the folder could not be written to; the original file is untouched. the setup assistant will add these two lines to permissions.allow for you:")
     for r in rules:
         print(f'      "{r}"')
 PY
@@ -175,6 +214,9 @@ case "$REL_PROJECTS" in
     exit 1
     ;;
 esac
+# Same whitelist again, on the exact value about to be written into the
+# wrapper's WRITE_PARENTS line.
+check_whitelist "$REL_PROJECTS"
 if command -v python3 >/dev/null 2>&1; then
   python3 - "$KIT/claude/scripts/codex-agent.sh" "$CLAUDE_DIR/scripts/codex-agent.sh" "$REL_PROJECTS" <<'PY'
 import re, sys
@@ -227,4 +269,6 @@ else
   printf '    GPT is not set up (optional); everything else is ready.\n'
 fi
 printf '    Prompt suites are in %s/suites — see GETTING-STARTED.md for how to use them.\n' "$KIT"
-printf '    Backups of anything replaced (if any) are in %s\n' "$BACKUP_DIR"
+if [ "$ANY_BACKUP" = 1 ]; then
+  printf '    Backups of anything replaced are in %s\n' "$BACKUP_DIR"
+fi

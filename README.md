@@ -41,10 +41,10 @@ suites/
 
 ## Updating
 
-Pull the latest kit and re-run `./install.sh`. It backs up every file it
-replaces into a dated folder under `~/.claude/backups/`, so a local edit to
-`CLAUDE.md` is never lost — diff against the backup and re-apply what you
-want.
+Pull the latest kit, then paste into Claude: *Run Phase 5, then Phase 7 of
+~/ai-starter-kit/SETUP-AGENT.md*. It backs up every file it replaces into a
+dated folder under `~/.claude/backups/`, so a local edit to `CLAUDE.md` is
+never lost.
 
 ## Provenance
 
