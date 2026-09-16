@@ -16,11 +16,16 @@ Ask the owner, one question at a time, with the one-click question tool if avail
 (plain chat otherwise):
 
 - **Projects folder.** Read the `WRITE_PARENTS` line of `~/.claude/scripts/codex-agent.sh`
-  to resolve it (default `~/developer`), or ask if that file isn't present. Write the
-  resolved ABSOLUTE path into the new project's `CLAUDE.md` §Confirmed parameters, and use
-  it (not a placeholder) everywhere §Playbooks names a lessons-home file.
+  to resolve it (default `~/developer`), or ask if that file isn't present. That line reads
+  `WRITE_PARENTS=("$REAL_HOME/<folder>")` — take the part after `$REAL_HOME/` and prefix
+  the person's real home folder. Write the resolved ABSOLUTE path into the new project's
+  `CLAUDE.md` §Confirmed parameters, and use it (not a placeholder) everywhere §Playbooks
+  names a lessons-home file. (The templates' `<lessons home path>` means this projects
+  folder.)
 - **Project name + folder** (kebab-case, e.g. `annual-fee-review-2027`), inside the
   projects folder just resolved.
+- **Voice samples** (only if `email-comms` will be a named playbook): ask for two or
+  three past emails they wrote, saved into `working-docs/supporting-evidence/`.
 - **One-paragraph purpose** and the key constraint(s) — e.g. a legislated cap, an award
   floor, a filing deadline. Constraints with legal force get their own KEY RULE. For every
   hard constraint, also ask **where it comes from** (statute/reg, award clause, email,
@@ -42,8 +47,8 @@ Ask the owner, one question at a time, with the one-click question tool if avail
 
 ## 2. Scaffold the folder
 
-- Create the project folder `<projects folder>/<name>` and open the session there if not
-  already.
+- Create the project folder `<projects folder>/<name>` (this session may be running in the
+  home folder; that is fine for kickoff — the hand-off below tells them to reopen there).
 - Create: `working-docs/`, `working-docs/temp/`, `working-docs/temp/superseded/`,
   `working-docs/supporting-evidence/`.
 - Copy each file from `templates/` into the project root, dropping the `-template` suffix
@@ -53,8 +58,8 @@ Ask the owner, one question at a time, with the one-click question tool if avail
 - Inline the 5-line safety card from `playbooks/excel-word-ops.md` §Safety card into
   `CLAUDE.md` if the project touches Office files at all.
 - If Stakes is high, create `verification-log.md` with a 3-line header: what the file is,
-  then one line per verified figure in the form `date | artefact | figure | source | who
-  checked`.
+  then one line per verified item — a figure, or for a document/legal project a claim
+  checked — in the form `date | artefact | item | source | who checked`.
 
 ## 3. Register
 
@@ -66,17 +71,22 @@ Ask the owner, one question at a time, with the one-click question tool if avail
   doesn't exist yet. Use that exact header, and fill the row with: Project = the project
   name; Purpose = `[ops] <one-line purpose, no client names, personal names, or amounts>`;
   Status = `active`; Tier = `ops · stakes normal|high`; Credentials = `none` (or what
-  applies); Expected spend = `none`; Remote = the absolute project folder path (local, no
-  git); Last touched = today. The row is index data, not project data — it never carries
+  applies); Expected spend = `none`; Remote = the project folder written relative to home (`~/<folder>/<name>`, local, no
+  git — never the `/Users/<account>` form, the index is meant to be shareable); Last
+  touched = today. The row is index data, not project data — it never carries
   more than that one generic line, from the first day.
 
   Example row:
-  `| annual-fee-review-2027 | [ops] annual fee review against the CPI cap | active | ops · stakes high | none | none | /Users/you/developer/annual-fee-review-2027 (local, no git) | 2026-09-16 |`
+  `| annual-fee-review-2027 | [ops] annual fee review against the CPI cap | active | ops · stakes high | none | none | ~/developer/annual-fee-review-2027 (local, no git) | 2026-09-16 |`
 
 ## 4. Self-check (mechanical — run before reporting, fix anything that fails)
 
-- No unfilled `<placeholder>` remains anywhere in the scaffolded files (grep for `<`).
-- No `v0.` literal remains anywhere in the scaffolded files.
+- No unfilled `<placeholder>` remains in `CLAUDE.md` or `prompt.md` (grep those two for
+  `<`; the other scaffolded files keep their example lines and the `<who>-<what>-<n>`
+  naming convention on purpose).
+- The suite version in `CLAUDE.md`'s scaffolded-by line and in `changelog.md`'s first
+  line is the CURRENT one from `ABOUTME.md` (no stale version left) — that line in
+  `CLAUDE.md` is the record closeout reads; leave it in.
 - `CLAUDE.md` is ≤ ~4KB and records the suite version.
 - If `excel-word-ops` is a named playbook, the safety card is inlined in `CLAUDE.md`.
 - `<projects folder>/lessons/` and `<projects folder>/playbooks/` exist.
