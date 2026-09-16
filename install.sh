@@ -201,6 +201,8 @@ printf '    installed agents: %s\n' "$(ls "$KIT/claude/agents" | tr '\n' ' ')"
 # 4. /gpt command
 backup "$CLAUDE_DIR/commands/gpt.md"
 cp "$KIT/claude/commands/gpt.md" "$CLAUDE_DIR/commands/gpt.md"
+# the /gpt pre-approval rules name this user's Claude scratch root, which carries the numeric user id
+sed -i '' "s|claude-__UID__|claude-$(id -u)|g" "$CLAUDE_DIR/commands/gpt.md"
 printf '    installed /gpt command\n'
 
 # 5. Codex wrapper, with the projects folder baked in. Build the replacement

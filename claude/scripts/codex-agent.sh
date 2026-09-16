@@ -1,5 +1,5 @@
 #!/bin/bash
-# codex-agent.sh version: 2.7
+# codex-agent.sh version: 2.8
 #
 # Line 2 above is the version header. Keep it on line 2, in the exact
 # `codex-agent.sh version: N.N` form, and bump it in the same commit that
@@ -88,7 +88,33 @@ unset CDPATH BASH_ENV ENV
 PATH=/usr/bin:/bin:/usr/sbin:/sbin:/opt/homebrew/bin:/usr/local/bin
 export PATH
 unset CODEX_HOME
-# codex-agent.sh v2.7 (2026-09-15)
+# codex-agent.sh v2.8 (2026-09-16)
+# v2.8 (2026-09-16): fail-closed guards from the family-kit review, dual-reviewed
+#   over two rounds. --outdir must resolve inside the per-user Claude Code
+#   scratch area or inside a `.gpt-runs` directory under a WRITE_PARENTS
+#   entry (a bare write parent is NOT an outdir: the wrapper removes
+#   label-named paths there, so an arbitrary repo directory would let an
+#   allowlisted call delete a repo's own `<label>.log`); `..` components and
+#   newlines are refused; after creation the directory is re-resolved,
+#   re-checked, and the run is pinned to the resolved path. --prompt-file and
+#   --schema must sit under a read root (the scratch area, a WRITE_PARENTS
+#   entry, or the --cd root given on THIS call - on resume, or with no --cd,
+#   the caller's cwd is not trusted), may not be symlinks or hard links (link
+#   count > 1) or dash-leading, and may not come from a protected asset
+#   (account homes and ~/.claude - a second layer under the allowlist). A --schema is copied into the outdir through a temp file with
+#   the copy staged before the cleanup, and codex is given the copy. Nothing is ever removed
+#   recursively: the cleanup helper unlinks a regular file or symlink and
+#   refuses a directory; the two outdir cleanup sites make that refusal fatal
+#   (five label-named paths: answer, log, session, account, schema copy). Residual: a concurrent LOCAL writer can
+#   still race the check-then-read of --prompt-file and the check-then-copy of
+#   --schema; that needs write access to the allowed roots and is outside
+#   this wrapper's threat model (the schema placement is additionally checked
+#   after the move: regular, non-symlink, single-link, or the run stops), as
+#   is a dangling symlink in an outdir tail
+#   whose target appears between the pre-check and mkdir (the post-mkdir
+#   re-check refuses the run; an empty directory can be left behind). With
+#   --sandbox workspace-write the outdir must be in the scratch root, never
+#   under the agent's own writable workspace.
 # v2.7 (2026-09-15): --model allowlist adds gpt-6-astra (it was already the
 #   config.toml default on a machine, so unflagged runs used it while an
 #   explicit --model gpt-6-astra was refused). Effort help now says that not
@@ -134,7 +160,12 @@ unset CODEX_HOME
 #
 # Options:
 #   --label NAME        short slug for output filenames (default: agent)
-#   --outdir DIR        where to write answer/log (required)
+#   --outdir DIR        where to write answer/log (required). v2.8: must be
+#                       inside the Claude Code scratch area
+#                       (/private/tmp/claude-<uid>) or inside a `.gpt-runs`
+#                       directory under a WRITE_PARENTS entry (scratch area
+#                       only with --sandbox workspace-write); no `..`
+#                       components - anything else is refused.
 #   --cd DIR             agent's working root (default: current directory)
 #   --sandbox MODE      read-only | workspace-write   (default: read-only)
 #                       (v2.6: workspace-write additionally requires --cd to
@@ -152,6 +183,12 @@ unset CODEX_HOME
 #                        `ultra` exists for some models but is not yet
 #                        allowlisted here; probe before adding it)
 #   --prompt-file FILE  read prompt from FILE instead of the trailing argument
+#                       (v2.8: not a symlink or hard link; must sit under the
+#                        scratch area, a write parent or the --cd root given
+#                        on this call; never
+#                        inside an account home or ~/.claude - same for
+#                        --schema, which codex reads from
+#                        a copy placed in the outdir)
 #   --resume ID         continue a previous session instead of starting fresh
 #                       (resume reads CURRENT config, not the session's - so
 #                        --sandbox is re-enforced via -c sandbox_mode, default
@@ -163,6 +200,8 @@ unset CODEX_HOME
 # Writes:  $OUTDIR/$LABEL.answer.md   final answer only (what you want to read)
 #          $OUTDIR/$LABEL.log         full transcript incl. session id
 #          $OUTDIR/$LABEL.session     session id, for --resume
+#          $OUTDIR/$LABEL.schema.json the wrapper-owned copy of --schema (v2.8; only
+#                                     when --schema was given - cleared on every run)
 #          $OUTDIR/$LABEL.account     the account home that launched codex for
 #                                     the last attempt. BEST-EFFORT (v2.6 doc
 #                                     fix - this was previously documented as
@@ -370,6 +409,82 @@ fi
 
 [ -n "$OUTDIR" ] || die "--outdir is required"
 case "$OUTDIR" in -*) die "--outdir may not start with a dash (got '$OUTDIR')" ;; esac
+# v2.8: --outdir must resolve at or inside an allowed output root. The wrapper
+# removes label-named paths there and writes there; before v2.8 any
+# writable directory was accepted, so an allowlisted invocation could delete
+# or overwrite files anywhere the user can write (kit review 2026-09-15).
+# Same fail-closed allowlist shape as the --cd guard: the nearest existing
+# ancestor is resolved with cd && /bin/pwd -P and its ancestors are compared
+# by device:inode against each allowed root. A `..` component is refused
+# outright (mkdir -p would resolve it through a not-yet-existing tail and
+# escape - cross-vendor review 2026-09-16), and after creation the directory
+# is resolved again, re-checked, and OUTDIR is pinned to that resolved path.
+# ($TMPDIR is deliberately NOT a root: the startup sanitiser clears the
+# environment, so it would never bind - a false root is worse than none.)
+# PER-MACHINE INSTALL-TIME SITE (like WRITE_PARENTS): the scratch root is the
+# macOS Claude Code layout; a port substitutes its own and marks it `win:`.
+# Allowed: inside the scratch root, or inside a directory NAMED `.gpt-runs`
+# that sits under a WRITE_PARENTS entry. A bare write parent is NOT allowed
+# (cross-vendor review 2026-09-16): the wrapper removes label-named paths in
+# the outdir, so an arbitrary repo directory as outdir would let an
+# allowlisted call delete a repo's own `<label>.log` or similar. A port whose
+# write parent is itself named `.gpt-runs` must add a subdirectory: the parent
+# match is tested before its basename, so the parent itself never counts.
+SCRATCH_ROOT="/private/tmp/claude-$(/usr/bin/id -u)"
+case "/$OUTDIR/" in */../*) die "--outdir may not contain a .. component (got '$OUTDIR')" ;; esac
+case "$OUTDIR" in *$'\n'*) die "--outdir may not contain a newline" ;; esac
+_outdir_in_scratch() {  # $1 resolved existing directory -> 0 if at/inside the scratch root
+  local _opr _opid _p _pid _np
+  [ -d "$SCRATCH_ROOT" ] || return 1
+  _opr="$(CDPATH= cd -- "$SCRATCH_ROOT" 2>/dev/null && /bin/pwd -P)" || return 1
+  _opid="$(stat -f '%d:%i' "$_opr")" || return 1
+  _p="$1"
+  while :; do
+    _pid="$(stat -f '%d:%i' "$_p")" || return 1
+    [ "$_pid" != "$_opid" ] || return 0
+    _np="$(dirname -- "$_p")"; [ "$_np" != "$_p" ] || return 1; _p="$_np"
+  done
+}
+_outdir_allowed() {  # $1 resolved existing directory, $2 logical tail below it (may be empty) -> 0 if allowed
+  local _op _opr _opid _p _pid _np _seen_runs _tail _tc _tcs
+  _tail="${2:-}"
+  _outdir_in_scratch "$1" && return 0
+  # A workspace-write agent could rename its own .gpt-runs outdir mid-run and
+  # replace it with a symlink (cross-vendor review 2026-09-16): with write
+  # access, only the scratch root - outside any write parent - is allowed.
+  [ "$SANDBOX" != "workspace-write" ] || return 1
+  for _op in "${WRITE_PARENTS[@]}"; do
+    [ -d "$_op" ] || continue
+    _opr="$(CDPATH= cd -- "$_op" 2>/dev/null && /bin/pwd -P)" || continue
+    _opid="$(stat -f '%d:%i' "$_opr")" || continue
+    _p="$1"
+    # the not-yet-existing tail counts by name (split on / only - no word
+    # splitting or globbing): `..` is already refused above
+    # bash 3.2 + set -u: an empty array expansion is an unbound-variable error,
+    # so guard the loop (the tail is empty whenever the outdir already exists).
+    _seen_runs=0
+    if [ -n "$_tail" ]; then
+      IFS=/ read -r -a _tcs <<< "$_tail"
+      for _tc in ${_tcs[@]+"${_tcs[@]}"}; do [ "$_tc" != ".gpt-runs" ] || _seen_runs=1; done
+    fi
+    while :; do
+      _pid="$(stat -f '%d:%i' "$_p")" || break
+      if [ "$_pid" = "$_opid" ]; then [ "$_seen_runs" = 1 ] && return 0; break; fi
+      [ "$(basename -- "$_p")" != ".gpt-runs" ] || _seen_runs=1
+      _np="$(dirname -- "$_p")"; [ "$_np" != "$_p" ] || break; _p="$_np"
+    done
+  done
+  return 1
+}
+_od="$OUTDIR"; _odtail=""
+while [ ! -d "$_od" ]; do
+  _odn="$(dirname -- "$_od")"
+  [ "$_odn" != "$_od" ] || die "cannot resolve --outdir: $OUTDIR"
+  _odtail="$(basename -- "$_od")/$_odtail"
+  _od="$_odn"
+done
+_odr="$(CDPATH= cd -- "$_od" 2>/dev/null && /bin/pwd -P)" || die "cannot resolve --outdir: $OUTDIR"
+_outdir_allowed "$_odr" "$_odtail" || die "--outdir must be inside $SCRATCH_ROOT or inside a .gpt-runs directory under a write parent (${WRITE_PARENTS[*]}); with --sandbox workspace-write only the scratch root is allowed (resolved: $_odr)"
 # A dash-leading directory name is an option to everything downstream; refuse
 # it, then hand codex the resolved path so a retargeted symlink cannot move
 # the workspace between check and launch. Unresolvable root fails closed.
@@ -502,13 +617,64 @@ case "$LABEL" in
   *[!A-Za-z0-9._-]*) die "--label must be a plain slug (letters, digits, . _ -)" ;;
 esac
 
+# v2.8: a prompt (or schema) file is read, echoed into the log and sent to the
+# model, so it must not be a symlink nor come from inside a protected asset -
+# an allowlisted invocation could otherwise use ~/.codex/auth.json as the
+# prompt (kit review 2026-09-15). Directory identity by device:inode, walked
+# up from the file's resolved directory, as the --cd guard does.
+PROTECTED_DIRS=("${ACCOUNT_HOMES[@]}" "$REAL_HOME/.claude")
+_refuse_protected_file() {  # $1 flag name, $2 path
+  local _fd _fdr _fp _fpid _pd _pdr _pdid _np _rr _rrr _rrid _ok
+  case "$2" in -*) die "$1 may not start with a dash (got '$2')" ;; esac
+  [ ! -L "$2" ] || die "$1 may not be a symlink (got '$2')"
+  [ "$(stat -f '%l' "$2")" = "1" ] || die "$1 may not be a hard link (link count > 1): $2"
+  _fd="$(dirname -- "$2")"
+  _fdr="$(CDPATH= cd -- "$_fd" 2>/dev/null && /bin/pwd -P)" || die "cannot resolve $1: $2"
+  # Allowlist first: the file must sit under an allowed read root - the same
+  # roots as --outdir plus the run's own --cd root (denylist gaps are silent;
+  # the allowlist is the guard, the protected-dir walk below is belt and braces).
+  _ok=1
+  local _cdroot=""; [ "$CD_SET" -eq 1 ] && _cdroot="$WORKDIR"
+  for _rr in "$SCRATCH_ROOT" "${WRITE_PARENTS[@]}" "$_cdroot"; do
+    [ -n "$_rr" ] && [ -d "$_rr" ] || continue
+    _rrr="$(CDPATH= cd -- "$_rr" 2>/dev/null && /bin/pwd -P)" || continue
+    _rrid="$(stat -f '%d:%i' "$_rrr")" || continue
+    _fp="$_fdr"
+    while :; do
+      _fpid="$(stat -f '%d:%i' "$_fp")" || break
+      if [ "$_fpid" = "$_rrid" ]; then _ok=0; break; fi
+      _np="$(dirname -- "$_fp")"
+      [ "$_np" != "$_fp" ] || break
+      _fp="$_np"
+    done
+    [ "$_ok" != 0 ] || break
+  done
+  [ "$_ok" = 0 ] || die "$1 must sit under the scratch area, a write parent, or the --cd root given on this call (got '$2')"
+  for _pd in "${PROTECTED_DIRS[@]}"; do
+    [ -d "$_pd" ] || continue
+    _pdr="$(CDPATH= cd -- "$_pd" 2>/dev/null && /bin/pwd -P)" || continue
+    _pdid="$(stat -f '%d:%i' "$_pdr")" || continue
+    _fp="$_fdr"
+    while :; do
+      _fpid="$(stat -f '%d:%i' "$_fp")" || break
+      [ "$_fpid" != "$_pdid" ] || die "$1 may not come from inside a protected asset ($_pd): $2"
+      _np="$(dirname -- "$_fp")"
+      [ "$_np" != "$_fp" ] || break
+      _fp="$_np"
+    done
+  done
+}
 if [ -n "$PROMPT_FILE" ]; then
   [ -f "$PROMPT_FILE" ] || die "prompt file not found: $PROMPT_FILE"
-  PROMPT="$(cat "$PROMPT_FILE")"
+  _refuse_protected_file --prompt-file "$PROMPT_FILE"
+  PROMPT="$(cat -- "$PROMPT_FILE")"
 fi
 [ -n "$PROMPT" ] || die "no prompt given (use --prompt-file FILE or -- 'text')"
 case "$SCHEMA" in -*) die "--schema path may not start with a dash (got '$SCHEMA')" ;; esac
 [ -z "$SCHEMA" ] || [ -f "$SCHEMA" ] || die "schema file not found: $SCHEMA"
+[ -z "$SCHEMA" ] || _refuse_protected_file --schema "$SCHEMA"
+# The schema is copied into the outdir after it exists (below) and codex is
+# handed the copy, so the file checked here is the file it reads.
 
 # Trusted-roots check (the owner's ruling 2026-08-13, ported from the Windows build of this wrapper): refuse
 # a codex that resolves anywhere unexpected. HONEST SCOPE, and a deliberate
@@ -602,8 +768,9 @@ usage_limit_hit() {
 # a symlink) is still treated as "not parked", but now WARNS - previously a
 # planted directory made parking silently succeed-and-do-nothing, so an
 # exhausted account was retried every call with no visible signal (Sol's
-# round-4 MEDIUM). The write side (write_line_safe below) now clears such an
-# object; this warning covers the read side seeing one first.
+# round-4 MEDIUM). v2.8: the write side (write_line_safe below) no longer
+# deletes such an object - it refuses, warns, and parking reports failure to
+# its caller, which warns and carries on; this warning covers the read side.
 account_parked_until() {
   local f="$1/.claude-wrapper-parked-until" v
   if [ -f "$f" ] && [ ! -L "$f" ]; then
@@ -632,14 +799,28 @@ human_date() {
 # (a DIRECTORY planted at the park-file path: `rm -f` failed quietly on it,
 # `mv` then moved the temp file INSIDE the directory and reported success, so
 # parking silently became a no-op and the exhausted account was retried every
-# run). `rm -rf` clears a directory or symlink without following it; `set -C`
+# run). v2.8: `_rm_own` unlinks a symlink without following it and refuses a
+# directory (non-fatal here); `set -C`
 # (noclobber) refuses to write through anything re-planted in the race window
 # between the rm and the write; the post-mv check catches an mv that nested
 # into a re-planted directory. Any failure returns non-zero with nothing
 # half-written at the target, never a false success.
+# v2.8: _rm_own removes only a regular file or a symlink (unlinking the link,
+# never following it) and REFUSES a directory with a non-zero return. The v2.6
+# rm -rf defeated a planted directory by deleting it recursively; refusing is
+# never destructive. Outdir call sites make the refusal fatal (a planted
+# directory at the answer path must stop the run); the bookkeeping callers
+# (park file, session/account files) stay best-effort as their comments say.
+_rm_own() {  # returns 1 (never exits) so best-effort callers can carry on
+  local _f
+  for _f in "$@"; do
+    if [ -L "$_f" ] || [ -f "$_f" ]; then rm -f -- "$_f" || return 1
+    elif [ -e "$_f" ]; then printf 'codex-agent: WARN refusing to remove %s: not a regular file or symlink\n' "$_f" >&2; return 1; fi
+  done
+}
 write_line_safe() {
   local path="$1" content="$2"
-  rm -rf -- "$path" "$path.tmp.$$" || return 1
+  _rm_own "$path" "$path.tmp.$$" || return 1
   ( set -C; umask 077; printf '%s\n' "$content" > "$path.tmp.$$" ) || { rm -f -- "$path.tmp.$$"; return 1; }
   mv -f -- "$path.tmp.$$" "$path" || return 1
   [ -f "$path" ] && [ ! -L "$path" ]
@@ -713,7 +894,11 @@ account_eligible() {
   return 0
 }
 
-mkdir -p -- "$OUTDIR"
+mkdir -p -- "$OUTDIR" || die "cannot create --outdir: $OUTDIR"
+# v2.8: re-resolve the created directory, re-check it, and pin the run to the
+# resolved path so nothing downstream re-parses the caller's spelling.
+OUTDIR="$(CDPATH= cd -- "$OUTDIR" 2>/dev/null && /bin/pwd -P)" || die "cannot resolve --outdir after creation"
+_outdir_allowed "$OUTDIR" "" || die "--outdir resolved outside the allowed roots after creation: $OUTDIR"
 ANSWER="$OUTDIR/$LABEL.answer.md"
 LOG="$OUTDIR/$LABEL.log"
 SESSION_FILE="$OUTDIR/$LABEL.session"
@@ -721,8 +906,31 @@ ACCOUNT_FILE="$OUTDIR/$LABEL.account"
 # A planted symlink here would turn a later `>` write into an arbitrary-file
 # overwrite; remove any existing paths before writing, and again immediately
 # before each write below (a workspace-write attempt on a still-parked
-# account could plant something in the window between attempts).
-rm -rf -- "$ANSWER" "$LOG" "$SESSION_FILE" "$ACCOUNT_FILE"
+# account could plant something in the window between attempts). v2.8: never
+# recursive - _rm_own refuses a directory at any of the five label-named paths
+# (answer, log, session, account, schema copy) and the refusal is fatal here.
+# v2.8: --schema is handed to codex as a wrapper-owned copy in the outdir. The
+# copy is STAGED to a temp file before the cleanup below (which clears any
+# stale <label>.schema.json - and would otherwise clear a fresh copy, or the
+# source itself when the caller passes the copy path back in), then moved
+# into place after it. Reading the source first also makes the identity case
+# (source == destination) a no-op in effect. set -C refuses a re-planted
+# symlink at the staging path, as in write_line_safe.
+_sc_tmp=""
+if [ -n "$SCHEMA" ]; then
+  _sc_tmp="$OUTDIR/$LABEL.schema.json.tmp.$$"
+  _rm_own "$_sc_tmp" || die "cannot clear the schema staging path"
+  ( set -C; umask 077; cat -- "$SCHEMA" > "$_sc_tmp" ) || die "cannot copy --schema into the outdir"
+fi
+_rm_own "$ANSWER" "$LOG" "$SESSION_FILE" "$ACCOUNT_FILE" "$OUTDIR/$LABEL.schema.json" || { [ -z "$_sc_tmp" ] || rm -f -- "$_sc_tmp"; die "a label-named path in --outdir is not a regular file (or could not be removed); refusing to run"; }
+if [ -n "$_sc_tmp" ]; then
+  # -h: a symlink-to-directory re-planted at the destination is replaced, not
+  # followed (macOS mv follows it otherwise); then verify the placement is a
+  # regular, non-symlink, single-link file before codex is pointed at it.
+  mv -f -h -- "$_sc_tmp" "$OUTDIR/$LABEL.schema.json" || { rm -f -- "$_sc_tmp"; die "cannot place the schema copy"; }
+  { [ -f "$OUTDIR/$LABEL.schema.json" ] && [ ! -L "$OUTDIR/$LABEL.schema.json" ] && [ "$(stat -f '%l' "$OUTDIR/$LABEL.schema.json")" = "1" ]; } || die "schema copy was displaced after placement; refusing to run"
+  SCHEMA="$OUTDIR/$LABEL.schema.json"
+fi
 
 # --- build + run one attempt on $CODEX_HOME ---------------------------------
 # `exec` and `exec resume` take different flag sets: resume rejects
@@ -733,7 +941,7 @@ rm -rf -- "$ANSWER" "$LOG" "$SESSION_FILE" "$ACCOUNT_FILE"
 # without the separator a prompt of "--config=..." reaches codex as a flag,
 # past the validated --sandbox.
 run_codex_once() {
-  rm -rf -- "$ANSWER" "$LOG" "$SESSION_FILE"
+  _rm_own "$ANSWER" "$LOG" "$SESSION_FILE" || die "a label-named path in --outdir is not a regular file; refusing to run"
 
   if [ -n "$RESUME" ]; then
     set -- exec resume --skip-git-repo-check --output-last-message "$ANSWER" \

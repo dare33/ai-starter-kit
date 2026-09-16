@@ -71,6 +71,12 @@ arguments and be rejected.
   --prompt-file "<scratch dir>/<label>.prompt.txt"
 ```
 
+`<scratch dir>` must be under this session's scratchpad
+(`/private/tmp/claude-<uid>/.../scratchpad/...`): since wrapper v2.8 (2026-09-16)
+any `--outdir` outside the scratch root or a `.gpt-runs` folder under a write
+parent is refused before codex starts, and the prompt file must sit under the
+same roots or the `--cd` repo - so keep the brief beside the outdir as above.
+
 Note the sandbox is **read-only**: a reviewer never writes.
 
 Prefix the manager's brief verbatim with this charter:
