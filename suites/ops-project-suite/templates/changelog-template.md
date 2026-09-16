@@ -8,4 +8,4 @@ Format: `<date> | <file> | <what changed + why> | backup: <path or n/a> | verifi
 
 ---
 
-<date> | (folder) | scaffolded governance set from ops-project-suite v0.2 | backup: n/a | verified: tree complete
+<date> | (folder) | scaffolded governance set from ops-project-suite <suite version> | backup: n/a | verified: tree complete

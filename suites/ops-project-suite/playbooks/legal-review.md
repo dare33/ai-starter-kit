@@ -1,9 +1,9 @@
 # Playbook — Legal Review
 
-Version: 0.1 (kit copy 2026-09-16) · Last updated: 2026-09-16
+Version: 0.2 (kit copy 2026-09-16) · Last updated: 2026-09-16
 For reviewing contracts, leases, compliance docs, and employment matters for a small
-business or a personal matter. Australian context (Fair Work, ACECQA/National Law for
-childcare, state regs) unless stated otherwise.
+business or a personal matter. Australian context (e.g. Fair Work, plus the regulator for
+the relevant industry, and state rules) unless stated otherwise.
 
 ## Framing — always
 
@@ -36,5 +36,3 @@ childcare, state regs) unless stated otherwise.
 - Marked-up returns use tracked changes/comments — never silent edits.
 - Statutory/award facts are verified against the current primary source **at review time**
   (rates and thresholds change annually) and carry the checked date.
-- Employment performance/dismissal matters: use the `performance-management` skill if
-  installed — it encodes the Fair Work process.

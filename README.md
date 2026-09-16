@@ -2,8 +2,8 @@
 
 A shareable Claude Code setup: global working rules (good practice +
 orchestration), five subagent role files, the `/gpt` command and hardened Codex
-wrapper for calling GPT models from inside Claude Code, and two project prompt
-suites (full and fast).
+wrapper for calling GPT models from inside Claude Code, and three project prompt
+suites (full, fast, and ops).
 
 New users: read `GETTING-STARTED.md` (one page). The Claude Code session that
 performs the install follows `SETUP-AGENT.md`; no terminal use is needed.

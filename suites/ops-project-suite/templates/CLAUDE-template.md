@@ -4,8 +4,8 @@
 > This file holds stable rules and context only — it NEVER carries status. Status and next
 > actions live in `prompt.md`; tasks in `todo.md`; history in `changelog.md`; takeaways in
 > `lessons.md`. Consult those on demand, not on boot.
-> Scaffolded by ops-project-suite v0.5 (`~/ai-starter-kit/suites/ops-project-suite/`).
-> Non-Claude agents: `agent.md` points here.
+> Scaffolded by ops-project-suite v0.6-kit (`~/ai-starter-kit/suites/ops-project-suite/`).
+> Non-Claude agents: `AGENTS.md` points here.
 
 ## What this project is
 
@@ -26,9 +26,10 @@ edits happen in the master only.">
 
 ## Confirmed parameters (dated; the owner's confirmations in chat land here, one line each)
 
-<Confirmed facts live here, dated — never re-asked, never in prompt.md. Unconfirmed ones
-wait in prompt.md §Open decisions. Every hard constraint carries its **source** (statute,
-award clause, email, file) so next year re-verifies the source, not the number.>
+<Confirmed facts live here, dated — never re-asked, never in prompt.md. Includes the
+resolved lessons-home path (`<lessons home path>`). Unconfirmed ones wait in prompt.md
+§Open decisions. Every hard constraint carries its **source** (statute, award clause,
+email, file) so next year re-verifies the source, not the number.>
 
 - <parameter = value> — source: <where it came from> _(confirmed <date>)_
 
@@ -51,13 +52,13 @@ this section.>
 ## Playbooks (load on demand from the suite)
 
 - `~/ai-starter-kit/suites/ops-project-suite/playbooks/<name>.md` — <when to load it>
-- <domain playbook if one exists, e.g. `~/developer/playbooks/annual-fee-review-playbook.md`
+- <domain playbook if one exists, e.g. `<lessons home path>/playbooks/annual-fee-review-playbook.md`
   — judgment layer>
 
 ## Folder map
 
 - Root — governance markdown only (this file, `prompt.md`, `todo.md`, `changelog.md`,
-  `lessons.md`, `agent.md`<, `verification-log.md` if high stakes — also created on the
+  `lessons.md`, `AGENTS.md`<, `verification-log.md` if high stakes — also created on the
   first bulk merge at any stakes level, per playbooks/excel-word-ops.md §Merge>).
 - `working-docs/` — all working files. <Note the naming convention and any substructure,
   e.g. per-owner subfolders.>
@@ -70,8 +71,8 @@ this section.>
    in-flight (for bulk runs, the `verification-log.md` tail is the authoritative
    progress), or the *last line* of `changelog.md` lacks a `verified:` result, the prior
    session likely died mid-operation — reconcile (finish, roll back, or flag to the
-   owner; log the outcome) before any new work. Tail-read those files (`tail -1` /
-   `Get-Content -Tail 1`) — never load the whole log.
+   owner; log the outcome) before any new work. Tail-read those files (`tail -1`) —
+   never load the whole log.
 2. **Micro-lint (same step, ~30s, mechanical):** `prompt.md` has exactly its four sections
    and is ≤ ~1.5KB; the `changelog.md` tail line is well-formed pipe format; this file
    carries no status strings. Then one **reality check:** pick one verifiable claim in

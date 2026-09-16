@@ -3,7 +3,7 @@
 This kit sets up Claude Code the way an experienced user runs it: standing
 rules for how it works with you, a small team of helper agents it can delegate
 to, the ability to get a second opinion from OpenAI's GPT models from inside
-Claude, and two ready-made recipes for starting a project properly. Claude
+Claude, and three ready-made recipes for starting a project properly. Claude
 does the whole install for you. You never open a terminal yourself.
 
 You need a Mac, about 45 minutes, and a **Claude Pro or Max** subscription.
@@ -56,10 +56,10 @@ personal rules file so every future session starts knowing them.
 - Type **/gpt** followed by a question to get GPT's take (if you set up GPT).
 
 When you want to start a real software project, ask Claude to read
-`~/ai-starter-kit/suites` and walk you through the solo-speed suite. A free
-GitHub account is optional — Claude can keep a project on your Mac only. For
-a documents or admin project instead, ask Claude to read
-`~/ai-starter-kit/suites/ops-project-suite/ABOUTME.md` and run its kickoff prompt.
+`~/ai-starter-kit/suites` and walk you through the solo-speed suite (a free
+GitHub account is optional — Claude can keep it on your Mac only). For a
+documents or admin project instead, open the session in that project's folder
+and ask Claude to read the ops suite's `ABOUTME.md` and run its kickoff prompt.
 
 ## If something goes wrong
 

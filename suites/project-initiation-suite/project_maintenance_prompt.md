@@ -1,6 +1,7 @@
 # Project Maintenance Prompt
 
-Version: 1.6 — Last updated: 2026-09-15
+Version: 1.7 — Last updated: 2026-09-16 (kit-only addition: ops-tier row handling for
+rows scaffolded by the ops-project-suite, see below)
 
 Companions: `project_structure_prompt.md`, `project_security_prompt.md`, and `PROJECTS.md` (the portfolio index, kept outside any repo, suggested `~/developer/PROJECTS.md`).
 
@@ -9,6 +10,8 @@ Companions: `project_structure_prompt.md`, `project_security_prompt.md`, and `PR
 | Project | Purpose | Status | Tier | Credentials | Expected spend | Remote | Last touched |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | example-project | one-line purpose | active | Low | none | $0/mo | github.com/you/example-project (or local only) | 2026-09-15 |
+
+- Rows whose Tier starts with `ops` are non-code projects from the ops-project-suite: for those, skip SECURITY.md, dependency audits, git history and remote checks; confirm only that the folder exists and the Status is current.
 
 Portfolio root: `<fill in at use — the folder containing my project folders>`
 

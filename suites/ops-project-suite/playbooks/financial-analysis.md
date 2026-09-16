@@ -1,18 +1,19 @@
 # Playbook — Financial Analysis
 
-Version: 0.4 (kit copy 2026-09-16) · Last updated: 2026-09-16
-Distilled from the spreadsheet projects this suite was built from. Exercise-specific
-judgment lives in the domain playbooks (e.g.
-`~/developer/playbooks/annual-fee-review-playbook.md`); this is the cross-exercise layer.
+Version: 0.5 (kit copy 2026-09-16) · Last updated: 2026-09-16
+Distilled from the projects this suite was built from. Exercise-specific judgment lives in
+the domain playbooks (e.g. `<projects folder>/playbooks/annual-fee-review-playbook.md`);
+this is the cross-exercise layer.
 
 ## Hard constraints are absolute, per line
 
 - A legislated cap or award floor applies to **every line**, not the average. Build an
   automated check column ("⚠ Over cap" style) and keep it green; run a full per-line sweep
   before anything is called final.
-- Rounding is a compliance event: rounding *up* can breach a cap; rounding *down* can look
-  like a deliberate reduction. Pre-fill capped values with `ROUNDDOWN`/`FLOOR(...,2)`;
-  require a comment on any intentional rounding.
+- **Rounding direction is a decision, not a default.** Record it in `CLAUDE.md` §Confirmed
+  parameters with its source (a cap may force rounding a charge down; pay is never rounded
+  down against the person). Never apply one direction to every line by default; require a
+  comment on any intentional rounding.
 
 ## Model architecture
 
@@ -20,9 +21,10 @@ judgment lives in the domain playbooks (e.g.
   never find-and-replace. Detail tabs → summary tabs by live formula; recalc on open.
 - **Live formulas over pasted values** in consolidations, with one canonical reference
   table (rate/wage tables) in the master that all rows look up.
-- **Roll-ups: AVERAGE the per-unit averages, never SUM them** where an average is meant;
-  pick one portfolio-% definition (ratio-of-averages is the tested default) and state it
-  on the summary tab.
+- **Roll-ups: state the weighting.** A simple average of per-unit averages treats every
+  unit as equal; a ratio of totals weights by size. Pick the one the exercise needs, write
+  it on the summary tab, and reconcile unit results to the aggregate total before anything
+  is called final.
 - Summary matrices are for reading; **billing/payroll outputs are long-format** — one row
   per real line with its own value, floored to the cent.
 
@@ -45,8 +47,10 @@ counts in vs out, formula-error count, spot-check results, and the backup path. 
 figures must be retrievable without re-deriving them.
 
 **Audited, not just logged (Stakes: high):** at major milestones and at closeout, run the
-kit's `reviewer` agent on it (ask Claude to "spawn the reviewer role on <file>" with a
-one-paragraph brief naming what to attack), and `/gpt review <file>` as well when GPT is
-set up, to re-derive 2–3 randomly chosen QA lines from the artifacts. A finding stops the
-step until it is reconciled or consciously accepted with the reason written down.
+reviewers on the final artefacts (name them: the workbook/document and
+`verification-log.md`) — spawn the `reviewer` role AND the `reviewer-gpt` role, each with a
+one-paragraph brief naming those artefacts and what to attack, to re-derive 2–3 randomly
+chosen QA lines from them. If `reviewer-gpt` is unavailable because GPT is not set up,
+report that pass as OUTSTANDING — the audit is not passed until both have run. A finding
+stops the step until it is reconciled or consciously accepted with the reason written down.
 Self-attested QA is a start, not a finish.

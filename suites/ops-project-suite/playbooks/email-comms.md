@@ -1,6 +1,6 @@
 # Playbook — Email & Comms
 
-Version: 0.2 (kit copy 2026-09-16) · Last updated: 2026-09-16
+Version: 0.3 (kit copy 2026-09-16) · Last updated: 2026-09-16
 
 ## Non-negotiables
 
@@ -8,14 +8,15 @@ Version: 0.2 (kit copy 2026-09-16) · Last updated: 2026-09-16
   owner reviews → send. Create drafts, never send directly, even when a send tool is
   available.
 - **Drafts sound like the owner's voice** — learn it from the About me section of their
-  rules file and any samples they give: plain, direct, no corporate filler, short
-  paragraphs. If a writing-style skill/profile exists, use it; otherwise mirror their
-  emails in `supporting-evidence/` before drafting.
+  rules file and two or three past emails they paste in (ask for them once, at kickoff):
+  plain, direct, no corporate filler, short paragraphs. If a writing-style skill/profile
+  exists, use it; otherwise mirror those emails in `working-docs/supporting-evidence/`
+  before drafting.
 
 ## Audience patterns
 
 Organisation-specific audience mappings live in the domain layer (e.g.
-`~/developer/playbooks/<organisation>-comms-patterns.md` — an optional domain-layer note
+`<projects folder>/playbooks/<organisation>-comms-patterns.md` — an optional domain-layer note
 the project may name) — load the one the project names. The generic shapes:
 
 - **Internal actioners** (staff who must do something): lead with the decision and the
@@ -30,8 +31,8 @@ the project may name) — load the one the project names. The generic shapes:
 ## Evidence handling
 
 - Inbound mail that justifies a decision is evidence: save as `.eml` (or PDF) to
-  `supporting-evidence/` under `<who>-<what>-<n>`, and cite the filename wherever the
-  decision is recorded (sheet comment, proposals register).
+  `working-docs/supporting-evidence/` under `<who>-<what>-<n>`, and cite the filename
+  wherever the decision is recorded (sheet comment, proposals register).
 - Quotes pulled from emails into registers are **verbatim** — square-bracket any edits.
 
 ## Mass/comms exercises

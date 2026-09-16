@@ -2,7 +2,7 @@
 
 Capture anything that would make the next run of this exercise faster, cleaner, or
 lower-risk. Concrete and actionable; add as they surface, review at session end. At
-closeout these are distilled into `~/developer/lessons/` (tool gotchas) and the domain
+closeout these are distilled into `<lessons home path>/lessons/` (tool gotchas) and the domain
 playbook (judgment) — so write entries a stranger could act on.
 
 ## Process
@@ -15,7 +15,7 @@ _(none yet)_
 
 ## Tooling
 
-_(Generic Office/Excel gotchas probably already exist in `~/developer/lessons/excel.md`
+_(Generic Office/Excel gotchas probably already exist in `<lessons home path>/lessons/excel.md`
 and `office-files.md` — check before writing a duplicate; note only what's new.)_
 
 ## Suite friction

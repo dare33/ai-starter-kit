@@ -1,20 +1,9 @@
----
-title: Office & PDF file-handling lessons
-description: Cross-project lessons on Office/PDF file internals - .xlsx/.docx/.pptx are ZIP archives (recover a truncated one via a PK-header walk + zlib inflate); a byte-stable checksum while the user sees a working file means a sync artifact, not corruption (and an intermittent "not a zip" on a Google Drive file is a cold read mid-sync - hydrate + retry); text extraction misses pasted images (pull from the media/ folder); pdfplumber for digital PDFs vs rendering image-based pages
-type: reference
-status: ongoing
-date: 2026-07-06
-updated: 2026-07-06
-tags: [docx, pdf, xlsx, pptx, zip, data-recovery, lessons]
-author: agent
-sources: [distilled from a 2026 spreadsheet project]
----
-
 # Office & PDF file-handling lessons
 
-Per-topic lesson file: append Office/PDF file-internals, recovery, and extraction gotchas
-here as they're learned. Excel editing/formula gotchas live in [[excel]]; document
-*branding*/templates in [[document-branding-practices]].
+What this is: cross-project lessons on Office/PDF file internals — ZIP recovery,
+sync-artifact detection, and text/table extraction, appended as they're learned.
+
+Excel editing/formula gotchas — see excel.md.
 
 ## Office files are ZIP archives
 `.xlsx` / `.docx` / `.pptx` are ZIPs - unzip to inspect/modify the raw XML; embedded images

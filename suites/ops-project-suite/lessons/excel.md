@@ -1,20 +1,8 @@
----
-title: Excel lessons
-description: Cross-project Excel/openpyxl gotchas - programmatic edits to workbooks with Tables (ListObjects) can make Excel refuse to open (normalise via LibreOffice); external links fail silently; join on stable IDs not names; openpyxl drops cached formula results (recalc-on-open + verify logic independently); manually-set row heights clip wrapped text
-type: reference
-status: ongoing
-date: 2026-07-06
-updated: 2026-07-06
-tags: [excel, openpyxl, libreoffice, spreadsheets, lessons]
-author: agent
-sources: [distilled from a 2026 spreadsheet project]
----
-
 # Excel lessons
 
-Per-topic lesson file: append Excel/openpyxl gotchas here as they're learned, newest
-first. Office-file internals (ZIP recovery, docx/pdf extraction) live in [[office-files]];
-document *branding*/templates in [[document-branding-practices]].
+What this is: cross-project Excel/openpyxl gotchas, appended as they're learned.
+
+Office-file internals (ZIP recovery, docx/pdf extraction) — see office-files.md.
 
 ## Editing workbooks with Tables (ListObjects) can make Excel refuse to open the file
 Libraries like `openpyxl` re-serialise the package in a way Excel rejects - especially when
@@ -33,7 +21,7 @@ someone edits/refreshes - then #REF or an "update links?" prompt. Detect by scan
 for `[n]` references; fix by repointing to an internal sheet or hard-coding stable identifiers.
 
 ## Join on stable IDs, never on names
-Names drift across sheets ("Mount" appears as "Mt", "Hidden Valley" as "Edens Landing"),
+Names drift across sheets ("Riverside" appears as "Rvrside", "Hillcrest" as "Hill Crest"),
 silently breaking VLOOKUP/INDEX-MATCH. Match on codes/IDs. If a lookup only has the name and
 the name isn't reliable, hard-code the immutable ID instead.
 
@@ -49,5 +37,4 @@ Either leave height unset (auto-fit) or compute it from content
 
 ## Back up + visually render before delivering
 Always back up before a programmatic edit, and do a visual render (xlsx -> PDF -> image) to
-catch layout/clipping before delivering. (Generic mutation-safety - dry-run diffing - lives in
-[[agent-session-working-lessons]].)
+catch layout/clipping before delivering.
