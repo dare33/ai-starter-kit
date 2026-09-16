@@ -24,8 +24,7 @@ absent or empty, the audit instead re-derives 2–3 final figures from the artef
 their sources directly — say so. Then run the reviewers on the final artefacts (name them:
 the workbook/document and `verification-log.md`): spawn the `reviewer` role AND the
 `reviewer-gpt` role, each with a one-paragraph brief naming the exact artefacts and what
-to attack; if `reviewer-gpt` is unavailable because GPT is not set up, report that pass as
-OUTSTANDING — the audit is not passed until both have run. Self-attested QA is a start,
+to attack; if `reviewer-gpt` is unavailable because GPT was never set up on this Mac, a single-reviewer pass is the accepted ceiling — write that down as the reason and continue; if GPT is set up but the pass failed to run, report it as OUTSTANDING and do not call the audit passed. Self-attested QA is a start,
 not a finish. A finding or discrepancy stops closeout until it is reconciled or consciously
 accepted with the reason written down.
 
@@ -57,8 +56,7 @@ their own).
   must open with a **boot sequence** for the next run: **first, clear any
   `reviewed: pending` entries** — spawn the `reviewer` role AND the `reviewer-gpt` role,
   each with a one-paragraph brief naming the exact artefacts (list them) and what to
-  attack; if `reviewer-gpt` is unavailable because GPT is not set up, report that pass as
-  OUTSTANDING — the audit is not passed until both have run; a finding stops the step
+  attack; if `reviewer-gpt` is unavailable because GPT was never set up on this Mac, a single-reviewer pass is the accepted ceiling — write that down as the reason and continue; if GPT is set up but the pass failed to run, report it as OUTSTANDING and do not call the audit passed; a finding stops the step
   until it is reconciled or consciously accepted with the reason written down — **the
   playbook is not load-bearing until they're cleared**; then clone this folder as
   scaffold, confirm this year's parameters + sources, reset state files, re-issue

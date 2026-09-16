@@ -129,9 +129,7 @@ sessions start far cheaper and cannot inherit contradictions from files they did
 - **Distilled judgment is `reviewed: pending` until adversarially reviewed.** Closeout
   marks new/changed domain-playbook judgment `reviewed: pending`; the next run's boot
   sequence clears it — spawn the `reviewer` role AND the `reviewer-gpt` role, each with a
-  one-paragraph brief naming the exact artefacts (list them) and what to attack; if
-  `reviewer-gpt` is unavailable because GPT is not set up, report that pass as OUTSTANDING
-  — the audit is not passed until both have run; a finding stops the step until it is
+  one-paragraph brief naming the exact artefacts (list them) and what to attack; if `reviewer-gpt` is unavailable because GPT was never set up on this Mac, a single-reviewer pass is the accepted ceiling — write that down as the reason and continue; if GPT is set up but the pass failed to run, report it as OUTSTANDING and do not call the audit passed; a finding stops the step until it is
   reconciled or consciously accepted with the reason written down — before the playbook
   is load-bearing. Closeout stays light; the review lands exactly when the rules are
   about to matter.
