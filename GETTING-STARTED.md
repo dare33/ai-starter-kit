@@ -51,15 +51,15 @@ personal rules file so every future session starts knowing them.
 
 ## 6. Quit and reopen Claude, then try it
 
-- Ask it to **plan a small project before building it**. Watch it plan,
-  ask you to confirm, then delegate the build to a helper.
+- Ask it to **plan a small project before building it**. Watch it plan, ask
+  you to confirm, then delegate the build to a helper.
 - Type **/gpt** followed by a question to get GPT's take (if you set up GPT).
-- Ask Claude to help you write a document, or to plan a small personal
-  project and show you the plan before doing anything.
 
 When you want to start a real software project, ask Claude to read
 `~/ai-starter-kit/suites` and walk you through the solo-speed suite. A free
-GitHub account is optional — Claude can keep a project on your Mac only.
+GitHub account is optional — Claude can keep a project on your Mac only. For
+a documents or admin project instead, ask Claude to read
+`~/ai-starter-kit/suites/ops-project-suite/ABOUTME.md` and run its kickoff prompt.
 
 ## If something goes wrong
 

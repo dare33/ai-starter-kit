@@ -23,6 +23,7 @@ claude/
 suites/
   project-initiation-suite/     full governance: kickoff, structure, security, maintenance
   solo-speed-project-suite/     speed profile for solo prototypes (overlays the full suite)
+  ops-project-suite/            for non-code projects: documents, spreadsheets, comms, financial checks, legal reads
 ```
 
 ## Requirements
