@@ -51,7 +51,9 @@ figures must be retrievable without re-deriving them.
 reviewers on the final artefacts (name them: the workbook/document and
 `verification-log.md`) — spawn the `reviewer` role AND the `reviewer-gpt` role, each with a
 one-paragraph brief naming those artefacts and what to attack, to re-derive 2–3 randomly
-chosen QA lines from them. If `reviewer-gpt` is unavailable because GPT is not set up,
-report that pass as OUTSTANDING — the audit is not passed until both have run. A finding
+chosen QA lines from them. If `reviewer-gpt` is unavailable because GPT was never set up on this Mac, a
+single-reviewer pass is the accepted ceiling — write that down and continue; if GPT is
+set up but the pass failed to run, report it as OUTSTANDING and do not call the audit
+passed. A finding
 stops the step until it is reconciled or consciously accepted with the reason written down.
 Self-attested QA is a start, not a finish.

@@ -58,9 +58,8 @@ personal rules file so every future session starts knowing them.
 When you want to start a real software project, ask Claude to read
 `~/ai-starter-kit/suites` and walk you through the solo-speed suite (a free
 GitHub account is optional — Claude can keep it on your Mac only). For a
-documents or admin project instead, ask Claude (from your home folder) to read
-the ops suite's `ABOUTME.md` and run its kickoff prompt; it makes the folder
-and tells you to reopen the session there.
+documents or admin project, ask Claude to read the ops suite's `ABOUTME.md`
+and run its kickoff prompt; it makes the folder and says where to reopen.
 
 ## If something goes wrong
 
