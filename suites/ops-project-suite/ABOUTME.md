@@ -25,7 +25,9 @@ need.
 **Your projects folder is the one chosen at install** — default `~/developer`; it is the
 folder named on the `WRITE_PARENTS` line of `~/.claude/scripts/codex-agent.sh`. The lessons
 home lives inside it: `<projects folder>/lessons/`, `<projects folder>/playbooks/`,
-`<projects folder>/PROJECTS.md`.
+`<projects folder>/PROJECTS.md`. (The templates call this same projects folder
+`<lessons home path>`.) The first time: start the kickoff from your home folder — it
+creates the project folder and then tells you to reopen the session there.
 
 Spreadsheet automation needs LibreOffice — it's installed the first time a project needs
 it, not up front.
@@ -133,7 +135,7 @@ sessions start far cheaper and cannot inherit contradictions from files they did
   reconciled or consciously accepted with the reason written down — before the playbook
   is load-bearing. Closeout stays light; the review lands exactly when the rules are
   about to matter.
-- Every suite file carries `Version:` / `Last updated:`; bump on any edit. The **suite**
+- Every prompt and playbook carries `Version:` / `Last updated:`; bump on any edit. The **suite**
   version lives at the top of this file and is logged in `CHANGELOG.md`; scaffolded
   projects record it in their `CLAUDE.md` so closeout can flag projects built under
   stale rules.

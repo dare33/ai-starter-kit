@@ -72,7 +72,7 @@ Ask the owner, one question at a time, with the one-click question tool if avail
   name; Purpose = `[ops] <one-line purpose, no client names, personal names, or amounts>`;
   Status = `active`; Tier = `ops · stakes normal|high`; Credentials = `none` (or what
   applies); Expected spend = `none`; Remote = the project folder written relative to home (`~/<folder>/<name>`, local, no
-  git — never the `/Users/<account>` form, the index is meant to be shareable); Last
+  git — never the full account-path form, the index is meant to be shareable); Last
   touched = today. The row is index data, not project data — it never carries
   more than that one generic line, from the first day.
 

@@ -26,7 +26,8 @@ this is the cross-exercise layer.
   it on the summary tab, and reconcile unit results to the aggregate total before anything
   is called final.
 - Summary matrices are for reading; **billing/payroll outputs are long-format** — one row
-  per real line with its own value, floored to the cent.
+  per real line with its own value, rounded the way §Confirmed parameters says for that
+  line type (never silently floored).
 
 ## Data quality — trust nothing returned
 

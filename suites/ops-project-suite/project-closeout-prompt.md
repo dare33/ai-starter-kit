@@ -19,10 +19,12 @@ version at the top of `~/ai-starter-kit/suites/ops-project-suite/ABOUTME.md`, li
 `CHANGELOG.md` lines between them and say which changed rules this project did not follow.
 
 If `Stakes: high`: run the **verification audit** — re-derive 2–3 randomly chosen
-`verification-log.md` QA lines from the artefacts themselves. If `verification-log.md` is
-absent or empty, the audit instead re-derives 2–3 final figures from the artefacts against
-their sources directly — say so. Then run the reviewers on the final artefacts (name them:
-the workbook/document and `verification-log.md`): spawn the `reviewer` role AND the
+`verification-log.md` lines from the artefacts themselves — a figure recomputed, or for a
+document/legal project a claim re-checked against its clause or source. If the log is
+absent or holds only its header, the audit instead re-derives 2–3 final figures or claims
+from the artefacts against their sources directly — say so. Then run the reviewers on the
+final artefacts (name them: the workbook or document, and `verification-log.md` if it has
+entries): spawn the `reviewer` role AND the
 `reviewer-gpt` role, each with a one-paragraph brief naming the exact artefacts and what
 to attack; if `reviewer-gpt` is unavailable because GPT was never set up on this Mac, a single-reviewer pass is the accepted ceiling — write that down as the reason and continue; if GPT is set up but the pass failed to run, report it as OUTSTANDING and do not call the audit passed. Self-attested QA is a start,
 not a finish. A finding or discrepancy stops closeout until it is reconciled or consciously
@@ -42,9 +44,10 @@ row before it leaves the project folder. Process lessons never need row-level da
 **Layering rule (the sorting criterion):** suite playbooks are task-family generic — any
 merge, any comms exercise, any review. A lesson that names a specific organisation,
 exercise, or dataset can NOT land in a suite playbook; it goes to the domain layer and is
-referenced. A task family no playbook covers → create a new ≤4KB playbook in the suite,
-never a new suite (suites split on lifecycle, not tool — that's why coding repos have
-their own).
+referenced. A task family no playbook covers → draft a new ≤4KB playbook in the suite's
+`playbooks/` folder marked `reviewed: pending <date>` at the top, add a line to the suite
+`CHANGELOG.md`, and tell the owner — it is not load-bearing until the next kickoff's
+review clears it; never a new suite (suites split on lifecycle, not tool).
 
 - **Generic tool/technique gotchas** (Excel internals, Drive-mount behaviour, docx tricks)
   → append to the matching `<projects folder>/lessons/<topic>.md`. Never duplicate an entry
@@ -62,8 +65,9 @@ their own).
   scaffold, confirm this year's parameters + sources, reset state files, re-issue
   templates, set deadline + default.
 - **Suite-level friction** (a template section that misled, a missing playbook rule; check
-  lessons.md §Suite friction) → propose the edit to the suite file itself, with the version
-  bump, for the owner's approval.
+  lessons.md §Suite friction) → write the proposed edit into `lessons.md` §Suite friction and send it to whoever
+  shared the kit; do not edit the suite files in `~/ai-starter-kit` yourself (that folder
+  is updated by pulling the latest kit, and a local edit would be lost or conflict).
 
 **Promote, then prune (mandatory).** A lesson's best form is a changed default, not a
 remembered note. When a takeaway becomes a template default, playbook rule, check column,
@@ -84,10 +88,12 @@ Also dedupe: the target file may already carry the lesson — sharpen, don't app
 
 ## 4. Update the portfolio index
 
-- `<projects folder>/PROJECTS.md` row → Status becomes `done`, and the Purpose column gets
-  ` → carry-forward: <playbook>` appended (e.g. `[ops] annual fee review against the CPI
-  cap → carry-forward: annual-fee-review-playbook.md`). No client/personal names or
+- `<projects folder>/PROJECTS.md` row → Status becomes `done`, Last touched = today, and
+  the Purpose column gets ` → carry-forward: <playbook>` appended (e.g. `[ops] annual fee
+  review against the CPI cap → carry-forward: annual-fee-review-playbook.md`), or
+  ` → carry-forward: none` when the project produced no durable domain judgment — a
+  one-off letter or document run legitimately has none. No client/personal names or
   amounts land in the row at closeout either — the same boundary that applied at kickoff.
 
 Finish with a one-paragraph report: what was distilled where, and the single file next
-year's session should open first.
+time's session should open first (or "nothing to carry forward" when that is the truth).
