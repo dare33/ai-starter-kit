@@ -4,6 +4,25 @@ All notable changes to this kit are recorded here, in plain English, so
 anyone installing it can tell what changed without reading the code. Format
 loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## 1.1.1 - 2026-09-23
+
+Five improvements to the ops-project-suite (documents/admin projects) - four learned from
+the first two real closeouts, plus one workspace ruling: a high-stakes domain playbook is
+now allowed to run over the usual size limit when the only thing left to cut is a
+judgement call, as long as the reason is written down; a closed-out project's status file
+keeps its four standard headings, because that's what the template always uses, and a
+closed-out project in the same shape as every other one stays easy to read and compare;
+the end-of-project verification check, which already refused to be skipped, now takes
+its sample from your changelog, to-do list or project notes when there's no verification
+log to sample from; a project's decision and verification logs are left in place during
+tidy-up rather than swept into the "stray files" folder; and any large or confidential set
+of documents you receive from someone else (a data room, a broker pack, anything over
+about 100 MB or under a return/destroy obligation) is now kept in a folder outside the
+project - for example your iCloud Drive - instead of inside it, with just a log and a
+checksum list in the project (the log from kickoff, the checksum list added to as documents
+arrive) recording what was received and its status. There's nothing to do on your side beyond the usual update (the
+one pasted message in `README.md`).
+
 ## 1.1.0 - 2026-09-23
 
 Added a "tier" layer for models, so a future model release no longer means

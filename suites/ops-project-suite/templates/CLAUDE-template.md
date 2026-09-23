@@ -4,7 +4,7 @@
 > This file holds stable rules and context only — it NEVER carries status. Status and next
 > actions live in `prompt.md`; tasks in `todo.md`; history in `changelog.md`; takeaways in
 > `lessons.md`. Consult those on demand, not on boot.
-> Scaffolded by ops-project-suite v0.6-kit (`~/ai-starter-kit/suites/ops-project-suite/`).
+> Scaffolded by ops-project-suite v0.7-kit (`~/ai-starter-kit/suites/ops-project-suite/`).
 > Non-Claude agents: `AGENTS.md` points here.
 
 ## What this project is
@@ -48,6 +48,11 @@ this section.>
 - Nothing person-identifiable (individual rates/salaries, names tied to numbers) leaves
   this folder for the lessons home — generalise or anonymize at closeout; it is meant to
   be shared and may be synced.
+- <If the project receives a third-party document set:> Inbound documents live in
+  <folder outside the project>, never in this project folder; `working-docs/data-room/`
+  holds only `REGISTER.md` and `REGISTER.sha256`. At each receipt: a register line per
+  file and the batch's checksums appended (command in the register header). Return or
+  destroy = delete there + note in the register.
 
 ## Playbooks (load on demand from the suite)
 

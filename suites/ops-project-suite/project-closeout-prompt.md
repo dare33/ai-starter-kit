@@ -1,6 +1,6 @@
 # Project Closeout Prompt — Ops Project Suite
 
-Version: 0.6 (kit copy 2026-09-16) · Last updated: 2026-09-16
+Version: 0.7-kit (master 0.7) · Last updated: 2026-09-23
 
 > Paste this into a session opened in the finished project folder.
 > This is the step that makes the suite compound — do not skip it.
@@ -18,11 +18,14 @@ Read the suite version recorded in the project's `CLAUDE.md`; if it differs from
 version at the top of `~/ai-starter-kit/suites/ops-project-suite/ABOUTME.md`, list the
 `CHANGELOG.md` lines between them and say which changed rules this project did not follow.
 
-If `Stakes: high`: run the **verification audit** — re-derive 2–3 randomly chosen
-`verification-log.md` lines from the artefacts themselves — a figure recomputed, or for a
-document/legal project a claim re-checked against its clause or source. If the log is
-absent or holds only its header, the audit instead re-derives 2–3 final figures or claims
-from the artefacts against their sources directly — say so. Then run the reviewers on the
+If `Stakes: high`: run the **verification audit** — re-derive 2–3 randomly chosen QA claims
+from the artefacts themselves — a figure recomputed, or for a document/legal project a
+claim re-checked against its clause or source. Take the claims from `verification-log.md`;
+if the project has none, or the log holds only its header, take them from wherever it
+states them — `changelog.md`, `todo.md`, the hub — and re-derive those; if no claims are
+stated anywhere, re-derive 2–3 final figures or claims from the artefacts against their
+sources directly — say so. **The absence of a verification log is never a reason to skip
+the audit on a high-stakes project.** Then run the reviewers on the
 final artefacts (name them: the workbook or document, and `verification-log.md` if it has
 entries): spawn the `reviewer` role AND the
 `reviewer-gpt` role, each with a one-paragraph brief naming the exact artefacts and what
@@ -73,14 +76,26 @@ review clears it; never a new suite (suites split on lifecycle, not tool).
 remembered note. When a takeaway becomes a template default, playbook rule, check column,
 or boot-sequence step, **delete its prose form** from the lessons file / playbook — one
 fact, one home. Then enforce ceilings: playbooks ≤ ~4KB, domain playbooks ≤ ~6KB. If an
-update would breach a ceiling, promote or prune until it fits — never ship a bigger file.
+update would breach a ceiling, promote or prune until it fits, not a bigger file — with
+**one exception (0.7-kit):** a domain playbook for a `Stakes: high` exercise may stay over
+~6KB when the only cut left is a judgment rule; record the size and the reason in a dated
+note at the top of the playbook (its boot list).
 Also dedupe: the target file may already carry the lesson — sharpen, don't append twins.
 
 ## 3. Retire the folder cleanly
 
-- `prompt.md`: replace contents with a 5-line closed summary (outcome, date, pointer to the
-  playbook). `todo.md`: everything ticked or explicitly carried to the playbook's boot list.
-- Sweep stray files into `working-docs/temp/superseded/`.
+- `prompt.md`: cut back to a closed summary — outcome, date, pointer to the playbook —
+  **but keep the template's four section headings and its `_Last updated:_` line**: the
+  template (`templates/prompt-template.md`) fixes exactly these four sections, and a closed
+  summary kept in the same shape stays readable and comparable across the portfolio.
+  `todo.md`: everything ticked or explicitly carried to the playbook's boot list.
+- Sweep genuinely stray working files into `working-docs/temp/superseded/`. **Governance
+  and decision registers stay where they are** — the audit trail, not clutter: the
+  verification log stays at the project root; the data-room register stays under
+  `working-docs/data-room/`; a proposals register stays wherever it was created.
+- If the project holds a data room in a folder outside the project: every register line
+  reads `held`, `returned` or `destroyed (date)`; the project folder carries no data-room
+  documents, only `working-docs/data-room/REGISTER*`.
 - **Retention ruling:** `temp/` and `temp/superseded/` hold every backup of sensitive
   data made during the project. Ask the owner plainly: keep the backups for audit, or
   delete them now that the project is closed? Record the ruling in the final

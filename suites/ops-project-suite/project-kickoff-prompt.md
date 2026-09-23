@@ -1,6 +1,6 @@
 # Project Kickoff Prompt — Ops Project Suite
 
-Version: 0.5 (kit copy 2026-09-16) · Last updated: 2026-09-16
+Version: 0.7-kit (master 0.6) · Last updated: 2026-09-23
 
 > Paste this into a fresh session opened in the new project folder. It scaffolds the
 > governance set and registers the project.
@@ -37,6 +37,12 @@ Ask the owner, one question at a time, with the one-click question tool if avail
 - **Where the project folder lives and who has access** (local, cloud mount, shared
   drive; readers/writers). Mandatory when stakes are high — recorded in `CLAUDE.md`
   §Security defaults.
+- **Will the project receive a third-party document set** (a data room, broker pack,
+  source archive, anything under an NDA or a return-or-destroy obligation, or any inbound
+  set over ~100 MB)? If yes: name a folder OUTSIDE the project (for example a folder in
+  your iCloud Drive or wherever you keep confidential documents). Those documents never
+  enter the project folder — see ABOUTME §Conventions — the project keeps only a register
+  and a sha256 manifest.
 - **Applicable playbooks** — offer the current contents of `playbooks/` (an open set; it
   grows as closeouts add new task families). Also ask whether a domain-layer note applies
   (e.g. an organisation's comms patterns) and name it in `CLAUDE.md` §Playbooks.
@@ -60,6 +66,21 @@ Ask the owner, one question at a time, with the one-click question tool if avail
 - If Stakes is high, create `verification-log.md` with a 3-line header: what the file is,
   then one line per verified item — a figure, or for a document/legal project a claim
   checked — in the form `date | artefact | item | source | who checked`.
+- If step 1 named a document set: create `working-docs/data-room/REGISTER.md` with this
+  header, and add a KEY RULE naming the folder named in step 1. The checksum list is not
+  made at kickoff: it is appended to as each batch of documents arrives (the command is in
+  the register header below, so the session that receives the documents sees it) —
+
+  ```
+  # DATA ROOM REGISTER — <counterparty / set>
+  One line per file received, at receipt. Documents live in <folder outside the project>;
+  this register and working-docs/data-room/REGISTER.sha256 are the only data-room files in
+  the project folder. At each receipt, from the folder outside the project, append the
+  batch's checksums (never overwrite):
+  shasum -a 256 <the received files> >> /absolute/path/to/this/project/working-docs/data-room/REGISTER.sha256
+  Format: <date received> | <filename as stored> | <what it is> | <received via> | <status: held / returned / destroyed (date)>
+  ---
+  ```
 
 ## 3. Register
 
@@ -93,6 +114,8 @@ Ask the owner, one question at a time, with the one-click question tool if avail
 - The `<projects folder>/PROJECTS.md` row exists and carries no client/personal names or
   amounts.
 - `verification-log.md` exists with its 3-line header when Stakes is high.
+- If a document set was named: `working-docs/data-room/REGISTER.md` exists, and
+  `working-docs/data-room/REGISTER.sha256` exists once any document has been received.
 - Every hard constraint in §Confirmed parameters carries a source and a date.
 - §Security defaults is present, and the folder-location line is filled when stakes are high.
 

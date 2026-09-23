@@ -1,6 +1,6 @@
 # About This Suite — Ops Project Suite
 
-Version: 0.6-kit (forked from 0.5 on 2026-09-16: local lessons home, kit review wiring) · Last updated: 2026-09-16
+Version: 0.7-kit (master 0.7; forked from 0.5 on 2026-09-16: local lessons home, kit review wiring) · Last updated: 2026-09-23
 
 ## How to use this
 
@@ -120,7 +120,22 @@ sessions start far cheaper and cannot inherit contradictions from files they did
   not because the tools differ).
 - **Promote, then prune.** A lesson that becomes a template default, playbook rule, or
   check is deleted in prose form. Ceilings: playbooks ≤ ~4KB, domain playbooks ≤ ~6KB,
-  prompt.md ≤ ~1.5KB; breaching a ceiling forces promotion/pruning, never a bigger file.
+  prompt.md ≤ ~1.5KB; breaching a ceiling forces promotion/pruning, not a bigger file — with
+  **one exception (0.7-kit):** a domain playbook for a `Stakes: high` exercise may exceed
+  ~6KB where the only remaining cut is a judgment rule; the overrun and its reason go in a
+  dated note at the top of the playbook (its boot list), so it is a decision on the record,
+  not drift.
+- **Bulk inbound document sets never enter the project folder (0.7-kit).** A third-party
+  data room, broker pack, source archive, anything under an NDA or return-or-destroy
+  obligation, or any inbound set over ~100 MB lives in a folder OUTSIDE the project (for
+  example a folder in your iCloud Drive or wherever you keep confidential documents),
+  named at kickoff — a return-or-destroy obligation can then be proved from one place, the
+  project's own backups and `working-docs/temp/` sweeps never pick up copies of it, and the
+  project folder itself may be shared or synced (kickoff step 1 asks). The project keeps
+  `working-docs/data-room/REGISTER.md` (what was received, from whom, status) and
+  `working-docs/data-room/REGISTER.sha256`, appended to as each batch arrives (the
+  register header gives the command), so a held copy can be checked against its recorded checksum, and a return or
+  destruction is recorded against it — a checksum does not prove every copy was deleted.
 - **Confirmed facts live in CLAUDE.md §Confirmed parameters, dated.** Sessions never
   re-ask them; unconfirmed ones wait in prompt.md §Open decisions.
 - **prompt.md updates are atomic** — rewrite the whole file, never patch a section.
