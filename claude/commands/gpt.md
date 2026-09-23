@@ -2,9 +2,9 @@
 description: Hand work to one or more GPT agents (OpenAI Codex CLI) and report back
 argument-hint: [review|fan|<question or task>]
 allowed-tools: Bash(~/.claude/scripts/codex-agent.sh:*), Bash(mkdir:*), Read(//private/tmp/claude-__UID__/**), Edit(//private/tmp/claude-__UID__/**)
-version: 2.5 (2026-09-16 - allowed-tools scoped to the wrapper plus mkdir (a bare Bash entry pre-approved ANY shell command for the turn); wrapper v2.8 outdir/prompt-file guards noted)
+version: 2.6 (2026-09-23 - --model takes a TIER (sol|terra|luna|astra) resolved by wrapper v2.9's tier map, or a slug in the vendor's shape; the sol tier is gpt-6-sol; examples and the model paragraph rewritten around tiers; `~/ai-starter-kit/MODELS.md` named as the pin record)
 ---
-<!-- version history: 2.4 (2026-09-15 - astra reachable through the wrapper from codex-cli 0.154 (probed OK after the npm upgrade); the 0.149.1 refusal kept as history); 2.3 (2026-09-15 - --model slug list adds gpt-6-astra with wrapper v2.7; current config.toml default corrected; minimal effort noted as rejected by gpt-5.6-sol); 2.2 (2026-08-19 - two-account failover via codex-agent.sh v2.2; --model slugs documented; exit-code sharing between "codex failed" and "GPT unavailable" documented honestly, with the stderr discriminator; resume facts corrected) -->
+<!-- version history: 2.5 (2026-09-16 - allowed-tools scoped to the wrapper plus mkdir (a bare Bash entry pre-approved ANY shell command for the turn); wrapper v2.8 outdir/prompt-file guards noted); 2.4 (2026-09-15 - astra reachable through the wrapper from codex-cli 0.154 (probed OK after the npm upgrade); the 0.149.1 refusal kept as history); 2.3 (2026-09-15 - --model slug list adds gpt-6-astra with wrapper v2.7; current config.toml default corrected; minimal effort noted as rejected by gpt-5.6-sol); 2.2 (2026-08-19 - two-account failover via codex-agent.sh v2.2; --model slugs documented; exit-code sharing between "codex failed" and "GPT unavailable" documented honestly, with the stderr discriminator; resume facts corrected) -->
 
 The user wants GPT agents involved in this task: **$ARGUMENTS**
 
@@ -12,14 +12,15 @@ You orchestrate them through the wrapper at
 `~/.claude/scripts/codex-agent.sh` — the only allowlisted codex
 entry point. Never call `codex` directly; the wrapper exists so the
 sandbox-bypass flags stay unreachable. This command's Bash access is scoped
-to the wrapper's own allow rule plus `mkdir`, `cat`, and `ls`: these
-commands are pre-approved for this command; anything else still asks the
-person for permission - never ask for it; the wrapper is the only way to run
-codex.
+to the wrapper's own allow rule plus `mkdir`: these two are pre-approved for
+this command; anything else still asks the person for permission - never ask
+for it; the wrapper is the only way to run codex.
 
 The `allowed-tools` list above adds pre-approvals for exactly the wrapper (by
-its absolute path - the rule is a literal prefix match, so spell the command the
-same way), `mkdir`, and reads/writes under this user's Claude scratch root
+the exact spelling the kit installs into the allow rule - spell it exactly as
+the examples do: `~/.claude/scripts/codex-agent.sh`, no `bash ` in front; the
+kit installs an allow rule in that exact spelling), `mkdir`, and reads/writes
+under this user's Claude scratch root
 (`/private/tmp/claude-<uid>` - a per-machine value, like the wrapper path; `//` is
 the documented absolute-path form and `Edit` covers Write);
 it adds no other pre-approvals, and everything else follows the normal
@@ -32,8 +33,11 @@ write parent (`~/developer/.gpt-runs/...`) for read-only runs - a
 must sit under the scratchpad, a write parent, or the `--cd` root given on that
 call; it may not be a symlink or hard link, and may not come from the two account homes or
 `~/.claude` - the run dies before codex starts otherwise.
-Use absolute paths in every call: a permission rule is a literal prefix match, and
-inside double quotes a `~` is not expanded.
+Spell the wrapper itself exactly as the examples do: `~/.claude/scripts/codex-agent.sh`,
+no `bash ` in front; the kit installs an allow rule in that exact spelling. For every
+other path you pass as an argument (`--cd`, `--outdir`, `--prompt-file`), use an
+absolute path - those aren't matched by a permission rule, and inside double quotes
+a `~` is not expanded.
 
 ## The single rule that governs quality
 
@@ -66,7 +70,7 @@ agent, read-only, pointed at the relevant files:
 ```
 ~/.claude/scripts/codex-agent.sh \
   --label opinion --outdir <scratchpad>/gpt/<slug> --cd <repo-or-folder> \
-  --model gpt-5.6-sol --effort high \
+  --model sol --effort high \
   --prompt-file <scratchpad>/gpt/<slug>/opinion.prompt.md
 ```
 
@@ -87,7 +91,7 @@ has no rule and prompts; the harness's background mechanism replaces it):
 ```
 ~/.claude/scripts/codex-agent.sh \
   --label a --outdir <scratchpad>/gpt/<slug> --cd <dir> \
-  --model gpt-5.6-luna --effort low \
+  --model luna --effort low \
   --prompt-file <scratchpad>/gpt/<slug>/a.prompt.md
 ```
 
@@ -107,38 +111,39 @@ that served the original run and never fails over — see Accounts below.
 
 ## Model and reasoning effort
 
+Since wrapper v2.9 `--model` takes a **tier** - `sol | terra | luna | astra` -
+and the wrapper resolves it to the slug pinned in its tier map, the one
+per-release site; `~/ai-starter-kit/MODELS.md` records every pin
+with its probe date and CLI version. Name tiers, not slugs, so a vendor
+release never touches this file. An explicit slug is still accepted if it has
+the vendor's shape (`gpt-<major>[.<minor>]-<tier>`); anything else is refused
+before codex starts, and a well-formed slug the API does not know fails there
+with the vendor's own message. The wrapper prints `codex-agent: model <slug>`
+on stderr and the run header's `model:` line repeats the request; neither
+proves the model was served - that is exit 0 with an answer and no API error
+in the log.
+
 Defaults come from the serving account's `config.toml`, and where two
 accounts are configured their defaults can differ, so an unflagged run can
 land on a different model depending on which account serves it. Check the
 config file(s) before assuming a default.
-**Pass `--model` and `--effort` explicitly for routine work** - `gpt-5.6-sol`
-at `high` for opinions and reviews (a reviewer is never below `high`),
-`gpt-5.6-luna` or `gpt-5.6-terra` at `low` for mechanical slices - and when
-the user has asked for the top tier, pass `--model gpt-6-astra` explicitly -
-leaving it unflagged is not a way to request it, since a failover to account B
-would serve Sol. Astra is established on account A (config default since
-2026-09-15; 156 desktop-app turns 2026-09-05..09-09; explicit wrapper probe OK
-at codex-cli 0.154.0 on 2026-09-15 - 0.149.1 had been refused with "requires a
-newer version of Codex", so keep the CLI current), not on B; a pinned astra
-run that fails over to B may be refused at the API. Read the run header for
-the served account and model. The CLAUDE.md cost rule says raising a tier needs
-their say-so. If the user names a depth or speed preference in their request —
-"quick", "cheap", "think hard about this", "deep" — translate it to
-`--effort`: `none | minimal | low | medium | high | xhigh | max` (the
-wrapper's list; `ultra` exists for sol/terra but is not yet allowlisted). Use
-lower effort for mechanical fan-out slices and `xhigh`/`max` only for
-genuinely hard single questions, since effort drives both latency and quota
-burn.
-
-`--model` works: `gpt-5.6-sol | gpt-5.6-terra | gpt-5.6-luna` each ran
-end-to-end on the ChatGPT plan (2026-08-13);
-`gpt-6-astra` was added 2026-09-15 (wrapper v2.7) as the top tier - the peer
-of Fable on the Claude side - for particularly complex tasks and
-planning-mode work (planning analysis or adversarial plan review whose
-output the manager still owns), on the user's say-so, never as a role default. Any other
-slug is refused by the wrapper before it reaches codex. Not every model
-accepts every effort level: `gpt-5.6-sol` rejects `minimal`
-(`unsupported_value`, probed 2026-09-15).
+**Pass `--model` and `--effort` explicitly for routine work** - `sol` at
+`high` for opinions and reviews (a reviewer is never below `high`), `luna` or
+`terra` at `low` for mechanical slices - and when the user has asked for the top
+tier, pass `--model astra` explicitly - leaving it unflagged is not a way to
+request it, since an unflagged run takes the serving account's config default, which
+may be a different model entirely - pinning is the only way to be sure you
+get it. The sol and luna pins need codex-cli 0.156.0 or newer
+(`~/ai-starter-kit/MODELS.md` records the minimum tool version for each tier). The
+CLAUDE.md cost rule says raising a
+tier needs their say-so. If the user names a depth or speed preference in their
+request - "quick", "cheap", "think hard about this", "deep" - translate it to
+`--effort`: `none | minimal | low | medium | high | xhigh | max` (the wrapper's
+list; `ultra` exists for some models but is not yet allowlisted). Not every
+model accepts every level: 5.6 sol, gpt-6-sol and gpt-6-luna reject `minimal`
+(`unsupported_value`; 5.6 luna unprobed at that level - `~/ai-starter-kit/MODELS.md` keeps the record). Use lower
+effort for mechanical fan-out slices and `xhigh`/`max` only for genuinely
+hard single questions, since effort drives both latency and quota burn.
 
 ## Accounts
 

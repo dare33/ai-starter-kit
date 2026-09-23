@@ -31,8 +31,12 @@ Ground rules for this whole job:
   which the harness would time out.
 
 Work through the phases in order. Phase 0 is background for you to know, not
-an action step — read it, don't announce it. Say "Phase N of 8: …" as you
-start each of Phases 1–8.
+an action step — read it, don't announce it. Say "Phase N: …" as you start
+each of Phases 1–8 during a first install — never say "of 9": a first
+install never reaches Phase 9, so the phrase would only confuse. Phase 9
+only runs when the person asks for an update to a kit they already have
+installed, never during a first install; when it does run, announce it as
+"Phase 9 of 9: Update".
 
 ## Phase 0 — what the person will see
 
@@ -43,15 +47,21 @@ rather than telling them "everything else stays sandboxed":
 
 (a) **Claude Code permission prompts** appear before most commands you run.
     Click **Allow** each time.
-(b) **The unsandboxed retry of `./install.sh`** — Phase 5, and again in
-    Phase 7 only if they choose a different projects folder. `install.sh`
-    writes into `~/.claude`, and Claude Code's safety sandbox blocks any
-    command from writing there; the harness offers to retry unsandboxed.
-    Before asking for that retry, say this sentence first: "install.sh needs
-    to write into ~/.claude, and the safety sandbox blocks any command from
-    writing there — I'm going to ask you to allow this one command to run
-    outside that sandbox, just for this step." Then ask for **Allow once**.
-    Nothing else is ever run unsandboxed.
+(b) **The unsandboxed retry of `./install.sh`** — the installer is re-run,
+    each time needing this same retry, at every one of these points: Phase 5
+    (the first install), Phase 6 step 6 (once GPT is confirmed working),
+    Phase 7 (after any conf setting changes), and Phase 9 (every future
+    update). `install.sh` writes into `~/.claude`, and Claude Code's safety
+    sandbox blocks any command from writing there; the harness offers to
+    retry unsandboxed. Before asking for that retry, say this sentence first:
+    "install.sh needs to write into ~/.claude, and the safety sandbox blocks
+    any command from writing there — I'm going to ask you to allow this one
+    command to run outside that sandbox, just for this step." Then ask for
+    **Allow once**. The only other things ever run or edited outside the
+    normal sandbox flow are: the Terminal-window commands in (c) below, and
+    the two direct file edits in Phase 7 (the personal block in
+    `~/.claude/CLAUDE.md`, and `~/.claude/ai-starter-kit.conf`) — everything
+    else in this runbook is an ordinary sandboxed command.
 (c) **Commands run in an ordinary Terminal window** that you open for them
     (the Homebrew installer in Phase 2, `codex login` in Phase 4) run with
     the person's normal user rights, outside any Claude Code sandbox
@@ -78,7 +88,8 @@ Also expect:
    open on your home folder. Please close this Code session, open a new one,
    and when it asks which folder to work in, choose the one with your name
    and the little house icon — not Desktop or Documents."
-3. Confirm Apple's command-line tools (this provides `git`): run
+3. Confirm Apple's command-line tools (this provides `git` and `python3` —
+   `install.sh` requires python3 and refuses to run without it): run
    `xcode-select -p`. If it errors, run `xcode-select --install`. A dialog
    appears on their screen; tell them: "A window has popped up asking to
    install command line developer tools. Please click **Install** and agree
@@ -96,8 +107,9 @@ Also expect:
    print `arm64` and neither `/opt/homebrew/bin/brew` nor
    `/usr/local/bin/brew` exists yet, remember this (don't tell them yet) —
    Phase 2 uses it to skip GPT setup on an Intel Mac with no Homebrew
-   already installed, since the official installer refuses macOS on
-   anything but Apple silicon (checked 2026-09-15).
+   already installed: Homebrew dropped Intel Macs to its lowest support tier in
+   September 2026, and the official installer refused an Intel install when
+   checked on 2026-09-15.
 
 ## Phase 2 — Homebrew and the GPT question (the Mac package manager)
 
@@ -112,8 +124,8 @@ Codex access — if their login later says it doesn't, that's fine, skip it
   except the GPT roles (`/gpt`, `reviewer-gpt`) works without this; they'll
   simply report "unavailable". Tell them: "You can add GPT later — just open
   Claude Code and paste: *Run Phases 2 to 4 of
-  ~/ai-starter-kit/SETUP-AGENT.md, then Phase 6, and remove the 'GPT is not
-  set up' sentence from ~/.claude/CLAUDE.md*."
+  ~/ai-starter-kit/SETUP-AGENT.md, then Phase 6*." (Phase 6 sets `GPT=yes` in
+  the conf file and re-runs the installer itself once the probe passes.)
 - **Yes, but Phase 1 found an Intel Mac with no Homebrew already present:**
   tell them plainly: "This Mac is an older Intel model; the GPT add-on can't
   be installed automatically on it; the rest of the install will carry on." Go straight to
@@ -223,7 +235,14 @@ continue to Phase 5 rather than stopping.
 
 (Only reached if Phase 2's answer was Yes and Homebrew is available.)
 
-Check for `~/.codex/auth.json`. If present, skip to Phase 5.
+Check for `~/.codex/auth.json`. If present: skip to Phase 6 if the kit is
+already installed (`~/.claude/scripts/codex-agent.sh` exists) — this is the
+normal outcome when you were sent here by one of this file's own recovery
+lines, which already assume Phase 5 ran in an earlier session — otherwise
+skip to Phase 5 (a first install, where Phase 5 hasn't run yet). Following a
+recovery line straight into "skip to Phase 5" here would send the person
+through the installer a second time for no reason and never reach Phase 6 at
+all.
 
 **The only login path is a real Terminal window**, opened the same way
 Phase 2 opens one. Not `--device-auth` (codex-cli 0.149.1 does have that
@@ -256,10 +275,11 @@ minutes"):
 install.** Tell them plainly "GPT is not set up yet, but the rest of the
 install will carry on" (say "everything else works" only later, after Phase
 5 has actually run) and give them the recovery line: "paste: *Run Phase 4 of
-~/ai-starter-kit/SETUP-AGENT.md, then Phase 6*" (Phase 6 removes the
-'GPT is not set up' sentence once the probe passes). Mark GPT as not set up and
-continue straight to Phase 5. Do not try to capture or parse the Terminal
-window's other output — the two files above are the only signals you need.
+~/ai-starter-kit/SETUP-AGENT.md, then Phase 6*" (Phase 6 sets `GPT=yes` in
+the conf file and re-runs the installer itself once the probe passes). Mark
+GPT as not set up and continue straight to Phase 5. Do not try to capture or
+parse the Terminal window's other output — the two files above are the only
+signals you need.
 
 ## Phase 5 — Install the kit
 
@@ -272,15 +292,21 @@ cd ~/ai-starter-kit && ./install.sh
 Expect the sandbox to refuse this the first time, because it writes under
 `~/.claude` (Phase 0(b)). Ask for the one unsandboxed retry, using the exact
 sentence from Phase 0, then allow it. Note for them: re-running `install.sh`
-keeps the About me section; Phase 7 re-applies the other personal edits.
+keeps everything above the managed-block marker in `CLAUDE.md` — their own
+notes, plus the settings `install.sh` itself remembers in
+`~/.claude/ai-starter-kit.conf` (projects folder, spelling, whether GPT is
+set up). Phase 7 sets those settings the first time; nothing needs re-typing
+on a later run.
 
 Read its output. Any line starting with `WARNING` is something to read out
 in plain words. Two are expected and not failures: "not logged in" if Phase 4
 was skipped or timed out, and "codex CLI not found" if Phase 2's answer was
 No, Not sure, or an Intel Mac with no Homebrew — say so plainly rather than
-treating either as something gone wrong. A third — the malformed-settings
-WARNING about `~/.claude/settings.json` — is not something to just read out:
-it is your job to repair it yourself in Phase 6, check 2.
+treating either as something gone wrong. Two others are not something to
+just read out: the malformed-settings WARNING about
+`~/.claude/settings.json` (permission rule) and the matching WARNING about
+the model tier pins — both are your job to repair yourself, in Phase 6,
+checks 2 and 4.
 
 ## Phase 6 — Verify
 
@@ -301,7 +327,18 @@ and re-check 2 before moving on. A settings file that does not parse is
 ignored by Claude Code entirely, which would make every `/gpt` call ask for
 permission forever.
 
-4. If Phase 4 was done, run one probe (Claude Code may ask them to allow this
+4. Read `~/.claude/settings.json` and confirm its `env` block has all four
+   keys from `~/ai-starter-kit/claude/settings-env.json`, with the same
+   values. If any are missing or differ, that's the model-tier-pins WARNING
+   case from Phase 5 (or the file simply predates this kit's tier layer) —
+   add or fix them yourself with the file-edit tool (creating the `env`
+   block if it's missing), matching `settings-env.json` exactly, then
+   re-parse to confirm (same command as check 2) and re-check this item.
+   Claude Code only reads these pins at the start of a session, so nothing
+   changes for this session — say so, and remind them at Phase 8 to quit and
+   reopen once everything is done.
+
+5. If Phase 4 was done, run one probe (Claude Code may ask them to allow this
    command once; that's expected — tell them to click Allow). Run this as a
    **single** Bash call — deriving the projects folder and calling the
    wrapper must happen in the same call, since a variable set in one call
@@ -318,7 +355,7 @@ case "$PROJECTS_REL" in
   *)
     PROJECTS_DIR="$HOME/$PROJECTS_REL"
     mkdir -p "$PROJECTS_DIR/.gpt-runs/probe"
-    ~/.claude/scripts/codex-agent.sh --model gpt-5.6-sol --effort low --label probe \
+    ~/.claude/scripts/codex-agent.sh --model sol --effort low --label probe \
       --outdir "$PROJECTS_DIR/.gpt-runs/probe" --cd "$PROJECTS_DIR" \
       -- "Reply with exactly the two words: PROBE OK"
     ;;
@@ -327,17 +364,74 @@ esac
 
    Expect `PROBE OK`. If it says "all accounts exhausted or parked", the
    ChatGPT plan is out of Codex quota right now; that is not an install
-   failure — note it and move on. Any other error: stop and explain.
-5. If the probe returned `PROBE OK` and `~/.claude/CLAUDE.md` contains the
-   sentence "GPT is not set up on this machine yet" (from an earlier Phase 7),
-   remove that sentence with the file-edit tool and say so — GPT is now set up.
+   failure — note it and move on. If it fails because codex is older than
+   the minimum version `~/ai-starter-kit/MODELS.md` lists for the `sol` tier,
+   that's not an install failure either — tell them plainly and give the fix
+   from Phase 9 step 6 (`brew upgrade --cask codex`).
+
+   If instead codex itself is current but the API refuses the pinned slug and
+   the error names the model (for example "not supported" or "requires a
+   newer version" for `gpt-6-sol`) — this happens when the ChatGPT plan on
+   this account hasn't reached the kit's current pin yet — probe the previous
+   generation of **both** tiers explicitly, not just the one that just
+   failed: `sol` and `luna` can lag a plan independently, so probing only
+   `sol` and then setting both overrides on its result alone would be a
+   guess dressed up as a check. Two separate, self-contained Bash calls (each
+   re-derives `PROJECTS_REL` itself — a variable set in one call does not
+   exist in the next):
+
+```bash
+PROJECTS_REL="$(sed -n 's/^WRITE_PARENTS=("\$REAL_HOME\/\(.*\)")$/\1/p' ~/.claude/scripts/codex-agent.sh)"
+PROJECTS_DIR="$HOME/$PROJECTS_REL"
+mkdir -p "$PROJECTS_DIR/.gpt-runs/probe"
+~/.claude/scripts/codex-agent.sh --model gpt-5.6-sol --effort low --label probe-fallback-sol \
+  --outdir "$PROJECTS_DIR/.gpt-runs/probe" --cd "$PROJECTS_DIR" \
+  -- "Reply with exactly the two words: PROBE OK"
+```
+
+```bash
+PROJECTS_REL="$(sed -n 's/^WRITE_PARENTS=("\$REAL_HOME\/\(.*\)")$/\1/p' ~/.claude/scripts/codex-agent.sh)"
+PROJECTS_DIR="$HOME/$PROJECTS_REL"
+mkdir -p "$PROJECTS_DIR/.gpt-runs/probe"
+~/.claude/scripts/codex-agent.sh --model gpt-5.6-luna --effort low --label probe-fallback-luna \
+  --outdir "$PROJECTS_DIR/.gpt-runs/probe" --cd "$PROJECTS_DIR" \
+  -- "Reply with exactly the two words: PROBE OK"
+```
+
+   Open `~/.claude/ai-starter-kit.conf` with the file-edit tool and set only
+   the override(s) whose own probe returned `PROBE OK`: `TIER_SOL=gpt-5.6-sol`
+   if the first one passed, `TIER_LUNA=gpt-5.6-luna` if the second one did —
+   never both on the strength of one probe. Then re-run
+   `cd ~/ai-starter-kit && ./install.sh` (Phase 0(b) covers the unsandboxed
+   retry). Tell them in one sentence, honestly: "Your ChatGPT plan is on the
+   previous generation of this model for now; a later update re-checks
+   whether it's caught up" — nothing about this is automatic; nothing
+   re-probes until Phase 9 runs. Any other error from either probe: stop and
+   explain.
+6. If a probe (the pinned one, or the `gpt-5.6-*` fallback above) returned
+   `PROBE OK` and `~/.claude/ai-starter-kit.conf` has
+   `GPT=no` (from an earlier Phase 7) or no `GPT` line at all, open the conf
+   file with the file-edit tool, set the line to `GPT=yes` (add it if
+   missing), then re-run `cd ~/ai-starter-kit && ./install.sh` (Phase 0(b)
+   covers the unsandboxed retry). This removes the "GPT is not set up"
+   sentence from `~/.claude/CLAUDE.md` for you and re-checks the codex CLI —
+   say so: GPT is now set up.
 
 ## Phase 7 — Personalise their rules
 
-The file `~/.claude/CLAUDE.md` is now their standing set of working rules. Ask
-these questions with the one-click question tool (or plain chat questions,
-one at a time, if no such tool exists in this session), one at a time or
-grouped, never as a wall of text:
+The file `~/.claude/CLAUDE.md` is now their standing set of working rules. It
+has two parts, split by a line that reads `<!-- ai-starter-kit managed:
+everything below this line is replaced by the kit installer -->`: everything
+**above** that marker is theirs and is never touched by a later update;
+everything **below** it is the kit's own rules, replaced on every
+`install.sh` run. Everything in this phase either goes above the marker (a
+direct edit to `CLAUDE.md`) or into `~/.claude/ai-starter-kit.conf` (a
+setting install.sh reads and re-renders from) — never into the kit body
+itself, since that would be silently lost on the next update.
+
+Ask these questions with the one-click question tool (or plain chat
+questions, one at a time, if no such tool exists in this session), one at a
+time or grouped, never as a wall of text:
 
 1. **Name:** what should Claude call you? (free text)
 2. **Main use:** coding / documents, admin and writing / learning and
@@ -353,53 +447,54 @@ grouped, never as a wall of text:
    irreversible things (default) / just get on with it once we've agreed a
    plan.
 
-If they name another folder for question 5: expand it yourself (a leading
-`~` becomes `$HOME`), require the result to be under `$HOME` and not equal to
-it, and re-run: `cd ~/ai-starter-kit && PROJECTS_DIR=<absolute path>
-./install.sh` (Phase 0(b) covers the unsandboxed retry this needs). This
-keeps their About me section but replaces the rest of the file, so re-apply
-the edits below again afterwards.
+**First, apply anything that changes a conf setting, then re-run the
+installer once for all of them together:**
 
-Then edit `~/.claude/CLAUDE.md` directly with the file-edit tool (the Phase 0
-permission prompt naming that path — not a Bash command, and no manual
-backup copy needed: install.sh already backed up the shipped file under
-`~/.claude/backups/<stamp>/` in Phase 5):
-
-- If a `## About me` section already exists — its first line is exactly
-  `## About me`, which is what install.sh's own preservation logic looks
-  for, so keep that line exact — **replace it in place**: everything from
-  that first line up to (not including) the line before the first `# `
-  heading. Never insert a second `## About me` section. If none exists,
-  insert one at the very top, before the existing first heading.
-- Write their answers as three to six plain sentences. If they are not
-  coders, say so explicitly: Claude should explain terms, avoid jargon, and
-  prefer plain-English summaries.
-- If they chose American spelling: search for the words "Australian
-  spelling" (that exact word pair — the phrase around it wraps across two
-  lines, so search for just those two words) in `~/.claude/CLAUDE.md` **and**
-  in each of the five files in `~/.claude/agents/`, and change each match to
-  "American spelling". Then verify with
-  `grep -rc "Australian spelling" ~/.claude/CLAUDE.md ~/.claude/agents/` that
-  none remain, and report to them how many instances you changed.
+- If they named another folder for question 5: expand it yourself (a leading
+  `~` becomes `$HOME`), require the result to be under `$HOME` and not equal
+  to it.
+- If they chose American spelling: this needs `SPELLING=american` in the
+  conf.
 - If GPT was not set up for any reason (they said No or Not sure, an Intel
-  Mac, the admin check, a Terminal step, or a login that didn't complete),
-  add one sentence under
-  "The review gate" — but check it isn't already there first, so re-running
-  this phase never duplicates it: "GPT is not set up on this machine yet;
-  report the reviewer-gpt pass as OUTSTANDING and say so plainly, until
-  `codex login` has been run." If you're re-running this phase after GPT has
-  since been set up, remove that sentence instead (Phase 2's "add GPT later"
-  recipe says to do this).
-- If they chose "ask before every change", add one sentence under
-  "Delivering work" saying so (again, only if not already present); it
-  overrides the autonomy paragraph for them.
-- Leave every other rule intact. Do not delete sections.
+  Mac, the admin check, a Terminal step, or a login that didn't complete):
+  this needs `GPT=no` in the conf (Phase 5's first run already defaults to
+  `yes` when the conf doesn't exist yet, so this is what corrects it).
 
-These three edits — spelling, the GPT-outstanding sentence, and the check-in
-sentence — are exactly the ones any later `install.sh` re-run wipes along
-with the rest of the shipped file (About me is the only part it preserves),
-so re-apply them here every time this phase runs, each guarded by a
-check-first-then-add so nothing is ever duplicated.
+Open `~/.claude/ai-starter-kit.conf` with the file-edit tool and set the
+`SPELLING` and/or `GPT` lines to match (add a line if it's missing; leave
+`PROJECTS_DIR` and `KIT_VERSION` alone — install.sh manages those). Then, in
+one call:
+`cd ~/ai-starter-kit && PROJECTS_DIR=<absolute path> ./install.sh` if question
+5 named a folder (Phase 0(b) covers the unsandboxed retry this needs), or
+plain `cd ~/ai-starter-kit && ./install.sh` if it didn't. This re-renders the
+kit body and the five agent files from the conf you just edited — spelling
+changes throughout — and never touches the kit body's own text above the
+marker. It does touch one line of the personal block itself, automatically:
+when `GPT=no`, it adds the GPT-outstanding sentence there (once, if not
+already present); when `GPT=yes`, it removes that same sentence if an
+earlier run left it in. That one line is the installer's own bookkeeping,
+not something you need to add or remove by hand.
+
+**Then hand-edit the personal block** (everything above the marker) with the
+file-edit tool (the Phase 0 permission prompt naming that path — not a Bash
+command, and no manual backup copy needed: install.sh already backed up the
+shipped file under `~/.claude/backups/<stamp>/` in Phase 5):
+
+- If a `## About me` section already exists there — its first line is
+  exactly `## About me`, which is what install.sh's own preservation logic
+  looks for, so keep that line exact — **replace it in place**. If none
+  exists, insert one at the very top of the personal block. Never insert a
+  second `## About me` section.
+- Write their answers to questions 1–3 and 6 as three to six plain sentences.
+  If they are not coders, say so explicitly: Claude should explain terms,
+  avoid jargon, and prefer plain-English summaries.
+- If they chose "ask before every change" for question 7, add one sentence
+  to the personal block saying so (only if not already present — check
+  first, since this phase can re-run): it overrides the kit body's autonomy
+  paragraph for them. This is free text with no conf key, so it stays a
+  direct edit, unlike spelling and GPT above.
+- Leave everything else in the personal block intact. Do not delete
+  anything above the marker, and never edit anything below it directly.
 
 Show them a three-line summary of what you changed, not the diff.
 
@@ -425,9 +520,124 @@ Tell them, in plain English:
 Close with the honest state: what was verified (which probe ran and what it
 returned), and anything skipped (for example GPT login, or GPT being
 unavailable on an Intel Mac) and how to do it later — "open Claude Code,
-paste: *Run Phases 2 to 4 of ~/ai-starter-kit/SETUP-AGENT.md, then Phase 6,
-and remove the 'GPT is not set up' sentence from ~/.claude/CLAUDE.md*" if
-Homebrew was never installed, or just *Run Phase 4 of
+paste: *Run Phases 2 to 4 of ~/ai-starter-kit/SETUP-AGENT.md, then Phase 6*"
+if Homebrew was never installed, or just *Run Phase 4 of
 ~/ai-starter-kit/SETUP-AGENT.md, then Phase 6* if Homebrew and the Codex CLI
-are already installed and only the login timed out (Phase 6 removes the
-sentence itself once the probe passes).
+are already installed and only the login timed out (Phase 6 sets `GPT=yes`
+in the conf and re-runs the installer itself once the probe passes).
+
+## Phase 9 — Update
+
+This is the one path for every future kit release. It only runs when the
+person already has the kit installed and asks for an update (for example by
+pasting the one message in `README.md`'s Updating section) — never as part
+of a first install.
+
+1. Pull the latest kit: `git -C ~/ai-starter-kit pull --ff-only`. If this
+   fails (for example because of a local edit to a file inside the kit
+   folder itself, which shouldn't normally happen), stop and say plainly
+   what git reported, rather than forcing past it. **Re-read this phase
+   after the pull** — a later release may have changed these steps, and
+   you'd otherwise be following the copy you started with.
+2. Before running anything else, read the version they had: `grep
+   '^KIT_VERSION=' ~/.claude/ai-starter-kit.conf` (a missing conf file, or no
+   such line, means `1.0.0` — the first release, before the conf existed).
+   Then read `~/ai-starter-kit/CHANGELOG.md` and tell the person, in two
+   plain sentences, what's new in every entry newer than that version — no
+   version numbers or jargon, just what it means for them (for example:
+   "This update means a couple of the AI models Claude uses behind the
+   scenes have moved to newer versions; nothing you do day to day changes.").
+   **If the version you just read is `1.0.0`**, this is their first update
+   ever, and it needs a bit more care: v1.0.0 predates the conf file, so
+   their projects folder, spelling choice and whether GPT is set up exist
+   only inside the files this step is about to replace, and their own
+   personal notes sit inside the same file with no marker separating them
+   from the kit's own rules. Tell them plainly, before running the
+   installer: "This is a bigger update than usual — it's the first one since
+   you installed, so it also moves your existing settings into a small file
+   that future updates read directly. That happens automatically; I'll show
+   you the result afterwards so you can check nothing was missed." (The
+   installer does the actual migration — see install.sh's "Migration from a
+   v1.0.0 install" comment — you don't do anything differently in this step.)
+3. Run the installer the normal way: `cd ~/ai-starter-kit && ./install.sh`
+   (Phase 0(b) covers the unsandboxed retry this needs, the same as Phase
+   5). It backs up everything it replaces, the same as a first install, and
+   reads `~/.claude/ai-starter-kit.conf` for their existing settings — you
+   don't need to pass anything. Read its output: a `1.0.0` upgrade (step 2
+   above) prints one "migrated from your existing install: ..." line per
+   setting it recovered — read those out in plain words.
+4. **If step 2 found this was a `1.0.0` upgrade**, close the loop before
+   moving on: show them the personal block (everything in
+   `~/.claude/CLAUDE.md` above the `<!-- ai-starter-kit managed: ... -->`
+   marker — including any "## My notes (carried over from the previous
+   version)" section install.sh added there automatically) and the conf's
+   settings (`PROJECTS_DIR`, `SPELLING`, `GPT` in
+   `~/.claude/ai-starter-kit.conf`), then ask ONE question with the one-click
+   tool if available (plain chat otherwise): "Does this look right, or is
+   there something you'd set before that's missing?" If they say something
+   is missing, compare the dated backup this run just made of their old file
+   (`~/.claude/backups/<this run's stamp>/CLAUDE.md`, printed in Phase 5's/
+   this step's install output) against
+   `~/ai-starter-kit/claude/previous/CLAUDE-1.0.0.md` (the exact v1.0.0
+   template, kept in the kit for this purpose): any line present in their
+   backup but not in that file, and not already carried into the personal
+   block, is something they wrote — move it into the personal block above
+   the marker with the file-edit tool. If they say it looks right, just say
+   so and move on — no further action.
+5. Run `cd ~/ai-starter-kit && ./install.sh --check` and read its exit
+   code, not just its text: `0` means everything installed matches what the
+   kit ships; anything else means something is still out of date or
+   missing — read the table it prints and say plainly, in your own words,
+   which row is out of step.
+6. If the check shows codex or Claude Code below the minimum version listed
+   in `~/ai-starter-kit/MODELS.md` for a pin this update moved, say so
+   plainly and give the one command to fix it: `brew upgrade --cask codex`
+   for the Codex CLI (via the same Terminal-window recipe as Phase 3, since
+   a cask upgrade can also prompt for a password), or point them to
+   claude.ai/download for a newer Claude Code — do not attempt either
+   silently, since both can involve a password prompt or a restart. If the
+   conf's `GPT` line is `yes` and codex is current enough, re-run the
+   Phase 6 GPT probe (step 5 there) to confirm GPT still works after the
+   pin move — the `sol` and `luna` tiers may now need a newer codex-cli
+   than the version last confirmed working. Same logic as Phase 6 applies
+   here if the pinned probe fails on a named-model API refusal: fall back to
+   probing `gpt-5.6-sol` and `gpt-5.6-luna` separately and set only the
+   override(s) whose own probe passed (Phase 6 step 5 has the exact recipe
+   and the honest one-sentence wording to use).
+   The reverse also matters here, since this phase is what a person with an
+   existing override will hit next: if the conf already has `TIER_SOL` or
+   `TIER_LUNA` set from an earlier shortfall, re-probe the CURRENT kit-wide
+   pin first, explicitly — drop the override for the probe only (don't edit
+   the conf yet) by naming the exact current slug rather than the tier, since
+   the installed wrapper's `sol`/`luna` tier names still resolve through the
+   override while it's set in the conf:
+
+```bash
+PROJECTS_REL="$(sed -n 's/^WRITE_PARENTS=("\$REAL_HOME\/\(.*\)")$/\1/p' ~/.claude/scripts/codex-agent.sh)"
+PROJECTS_DIR="$HOME/$PROJECTS_REL"
+mkdir -p "$PROJECTS_DIR/.gpt-runs/probe"
+~/.claude/scripts/codex-agent.sh --model gpt-6-sol --effort low --label probe-current-sol \
+  --outdir "$PROJECTS_DIR/.gpt-runs/probe" --cd "$PROJECTS_DIR" \
+  -- "Reply with exactly the two words: PROBE OK"
+```
+
+```bash
+PROJECTS_REL="$(sed -n 's/^WRITE_PARENTS=("\$REAL_HOME\/\(.*\)")$/\1/p' ~/.claude/scripts/codex-agent.sh)"
+PROJECTS_DIR="$HOME/$PROJECTS_REL"
+mkdir -p "$PROJECTS_DIR/.gpt-runs/probe"
+~/.claude/scripts/codex-agent.sh --model gpt-6-luna --effort low --label probe-current-luna \
+  --outdir "$PROJECTS_DIR/.gpt-runs/probe" --cd "$PROJECTS_DIR" \
+  -- "Reply with exactly the two words: PROBE OK"
+```
+
+   (Use whichever slugs `~/ai-starter-kit/MODELS.md` currently lists as the
+   `sol`/`luna` pins — `gpt-6-sol`/`gpt-6-luna` as of this release — not the
+   overridden ones.) If a probe now succeeds for a tier whose override is
+   set, that tier's plan has caught up — tell them in one sentence and offer
+   to remove that tier's override line from the conf (with the file-edit
+   tool) and re-run the installer so they get the current pin again for it;
+   if they'd rather leave it, leave it. Handle `TIER_SOL` and `TIER_LUNA`
+   independently — one can catch up before the other.
+7. Tell them to **quit and reopen Claude Code**: the model-tier pins in
+   `settings.json`'s `env` block are only read at the start of a session, so
+   nothing this phase changed takes effect until they do.

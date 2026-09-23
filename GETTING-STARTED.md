@@ -61,6 +61,18 @@ GitHub account is optional — Claude can keep it on your Mac only). For a
 documents or admin project, ask Claude to read the ops suite's `ABOUTME.md`
 and run its kickoff prompt; it makes the folder and says where to reopen.
 
+## Getting updates later
+
+When a new version of this kit comes out, paste this into Claude: *"Pull the
+latest kit, then run Phase 9 of ~/ai-starter-kit/SETUP-AGENT.md."* It pulls
+the update, tells you in plain English what changed, and reinstalls it. Your
+own notes and settings — anything you told Claude in step 5 above, your
+projects folder, whether GPT is set up — are kept; the kit's own rules and
+helper agents are what gets replaced. (The very first time you update, Claude
+also does a one-time step of moving those choices into a small file so every
+update after that keeps them the same way — it shows you the result so you
+can check nothing was missed.)
+
 ## If something goes wrong
 
 Paste this into Claude: *"Re-run ~/ai-starter-kit/SETUP-AGENT.md; it is safe

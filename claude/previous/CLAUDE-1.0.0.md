@@ -38,18 +38,13 @@ artifact, diff, or test output, and re-run load-bearing checks yourself before
 telling me it passed. Keep driving until the task is done, flagging concerns,
 issues, and decisions to me as they arise; then report.
 
-**Route by ROLE NAME, never by model version.** Role definitions live in
-`~/.claude/agents/`, each naming the TIER it runs on — `opus`/`sonnet`/
-`haiku`/`fable` on the Claude side, `sol`/`terra`/`luna`/`astra` on the GPT
-side through the wrapper — never a specific version. Which version a tier
-means is pinned once per vendor: Claude tiers in the `env` block of
-`~/.claude/settings.json`, GPT tiers in the wrapper's own tier map.
-`~/ai-starter-kit/MODELS.md` records both, so a new model is a pin move plus a
-line there; a kit update moves the pins, nothing else. One exception: for a
+**Route by ROLE NAME, never by model name.** Role definitions live in
+`~/.claude/agents/`, each naming the model and effort it runs on. Nothing in a
+prompt, skill or doc names a model directly, so changing a model is an edit to
+one agent file and no workflow breaks. One exception to read carefully: for a
 GPT-backed role the frontmatter `model:` names the cheap Claude tier the
-*driver* shell itself runs on, and the GPT tier it works through is named
-separately in that file's `--model` flag (for example `--model sol`). One
-file, two tier names, different jobs.
+*driver* shell runs on, and the GPT model is named in that same file's
+`--model` flag. One file, two names, different jobs.
 
 Rules: parallel agents only for independent work — anything writing the same
 files runs serially or in isolated worktrees. Adjudication of agent output and
@@ -82,27 +77,18 @@ context, the file paths, and the shape of answer you want back.
 
 ### Model and effort per role
 
-Each role's default tier and effort live in ONE place: that role's
+Each role's default model and effort live in ONE place: that role's
 `~/.claude/agents/` file. Do not repeat them anywhere else — two sources of
-truth drift apart. Order of precedence for a session: (1) a kickoff prompt
-that names tiers — use those; (2) otherwise the agent file — the default,
-needing no conversation; (3) if a session needs to deviate, ask me at the
-first point a subagent is actually needed, with one-click options, one
-question per role. Name the roles in play when you first delegate. A kickoff
-prompt or memory entry that names a tier follows `~/ai-starter-kit/MODELS.md`; one that names
-a specific version instead pins that version, as a deviation.
+truth drift apart. Order of precedence for a session: (1) a kickoff prompt that
+names models — use those; (2) otherwise the agent file — the default, needing
+no conversation; (3) if a session needs to deviate, ask me at the first point a
+subagent is actually needed, with one-click options, one question per role.
+Name the roles in play when you first delegate.
 
-The top tier on each vendor (`fable` on Claude, `astra` on GPT) is for
-particularly complex tasks and planning-mode work: as the session model where
-the harness supports it, or as a planning-analysis or adversarial plan-review
-pass whose output the manager still owns. On my say-so; it is never a role
-default.
-
-**Known limit (documented Claude Code behaviour):** if the session itself is
-already running a model of the same family as a role's tier, the subagent
-inherits the session's exact model rather than the pin — for a load-bearing
-spawn from such a session, pass the full model ID from `~/ai-starter-kit/MODELS.md` as the
-Agent tool's `model` parameter instead of the tier name.
+The top tier on each vendor (Fable on Claude, Astra on GPT) is for particularly
+complex tasks and planning-mode work: as the session model where the harness
+supports it, or as a planning-analysis or adversarial plan-review pass whose
+output the manager still owns. On my say-so; it is never a role default.
 
 **Price is model and effort together,** not the model alone — a cheap model at
 `xhigh` can cost more than a dear one at `low`. The manager may lower either

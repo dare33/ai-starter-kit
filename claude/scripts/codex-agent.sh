@@ -1,5 +1,5 @@
 #!/bin/bash
-# codex-agent.sh version: 2.8
+# codex-agent.sh version: 2.10
 #
 # Line 2 above is the version header. Keep it on line 2, in the exact
 # `codex-agent.sh version: N.N` form, and bump it in the same commit that
@@ -88,7 +88,24 @@ unset CDPATH BASH_ENV ENV
 PATH=/usr/bin:/bin:/usr/sbin:/sbin:/opt/homebrew/bin:/usr/local/bin
 export PATH
 unset CODEX_HOME
-# codex-agent.sh v2.8 (2026-09-16)
+# codex-agent.sh v2.10 (2026-09-23)
+# v2.10 (2026-09-23): pin-only change - tier luna moves to gpt-6-luna (the
+#   owner's ruling 2026-09-23; probed at codex-cli 0.156.0, effort low;
+#   minimal rejected). Diff confined to the map line, this note and line 2.
+#   No review round.
+# v2.9 (2026-09-23): --model takes a TIER (sol / terra / luna / astra) resolved
+#   through a tier map that is the wrapper's one per-release site, or an
+#   explicit slug checked for the vendor's shape instead of against a literal
+#   list. Tier sol moves to gpt-6-sol (the owner's ruling 2026-09-23; probed at
+#   codex-cli 0.156.0, effort low and high; minimal rejected).
+#   The resolved slug is printed on stderr, and a map entry that does not end
+#   in its own tier name is refused (a pin may move a tier only to a newer
+#   version of the same name; anything else is a tier change for the gate).
+#   The sanitiser, outdir, prompt-file, schema, sandbox and account guards are
+#   untouched; the model check itself is the change, and it is a real one: the
+#   literal list also limited WHICH models could be asked for, whereas any
+#   shape-valid slug now reaches the API and the API's refusal, not the
+#   wrapper's, is the outcome for an unknown one.
 # v2.8 (2026-09-16): fail-closed guards from the family-kit review, dual-reviewed
 #   over two rounds. --outdir must resolve inside the per-user Claude Code
 #   scratch area or inside a `.gpt-runs` directory under a WRITE_PARENTS
@@ -175,11 +192,17 @@ unset CODEX_HOME
 #                        fails closed: a false refusal is visible immediately,
 #                        where the old protected-directory denylist failed
 #                        open on every enumeration gap.)
-#   --model NAME        override model (default: from account's config.toml)
+#   --model NAME        a TIER - sol | terra | luna | astra - resolved through
+#                       the MODEL_TIER_* map in the script (v2.9: its one
+#                       per-release site), or an explicit slug shaped
+#                       gpt-<major>[.<minor>]-<tier>; anything else is refused
+#                       here (default: from account's config.toml)
 #   --effort LEVEL      reasoning effort: none | minimal | low | medium | high |
 #                       xhigh | max   (default: from account's config.toml;
-#                        not every model accepts every level - gpt-5.6-sol
-#                        rejects minimal - and the list is not exhaustive:
+#                        not every model accepts every level - 5.6 sol,
+#                        gpt-6-sol and gpt-6-luna reject minimal; 5.6 luna is
+#                        unprobed at that level - and the list is not
+#                        exhaustive:
 #                        `ultra` exists for some models but is not yet
 #                        allowlisted here; probe before adding it)
 #   --prompt-file FILE  read prompt from FILE instead of the trailing argument
@@ -375,15 +398,64 @@ case "$EFFORT" in
   *) die "effort must be one of: none minimal low medium high xhigh max (got '$EFFORT')" ;;
 esac
 
-# Fixed allowlist of literal slugs (the three 5.6 slugs probed end-to-end
-# 2026-08-13; gpt-6-astra probed end-to-end 2026-09-15 at codex-cli 0.154.0 -
-# 0.149.1 had refused it with "requires a newer version of Codex", so a slug
-# can also fail on CLI version, not only on existence). Probe any new slug
-# before adding it: a non-existent one fails at the API, not here.
+# --- model: tier map + slug shape (v2.9) -----------------------------------
+# PER-RELEASE SITE. A role's agent file names a TIER (sol / terra / luna /
+# astra); this map says which slug the tier currently means, so a vendor
+# release is a map-line change here (plus the version bump, banner and change note MODELS.md names) and no agent file, command or prose
+# master moves. MODELS.md in the kit records
+# each pin with its probe date and the CLI version it was probed on - change
+# the two together, and bump the version on line 2 in the same commit - a
+# pin move changes which model runs, so the drift lint must be able to tell
+# the two routings apart. The lint reads the exact `N.N` form, so bump the
+# minor (2.9 -> 2.10) and refresh the version banner and change-note block
+# above in the same commit - those three sites plus this map are the whole
+# diff a review-exempt pin move may touch.
+# Probe before moving a pin: a slug can fail on CLI version, not only on
+# existence (gpt-6-astra was refused at 0.149.1 and served at 0.154.0), and
+# effort support is per model (gpt-6-sol and gpt-6-luna reject `minimal`,
+# probed 2026-09-23 at 0.156.0). A pin may only move a tier to a slug that
+# ends in the tier's own name - enforced below - so the review-exempt
+# "pin-only change" cannot quietly point luna at an astra-class model.
+MODEL_TIER_SOL="gpt-6-sol"       # 2026-09-23, codex-cli 0.156.0 (was gpt-5.6-sol)
+MODEL_TIER_TERRA="gpt-5.6-terra" # 2026-08-13 (gpt-6-terra refused on the ChatGPT plan 2026-09-23)
+MODEL_TIER_LUNA="gpt-6-luna"     # 2026-09-23, codex-cli 0.156.0 (was gpt-5.6-luna)
+MODEL_TIER_ASTRA="gpt-6-astra"   # 2026-09-15, codex-cli 0.154.0
+# An explicit slug is still accepted, but only in the vendor's own shape:
+# gpt-<major>[.<minor>]-<sol|terra|luna|astra>. The shape check is what keeps
+# the value inert as an argument (no spaces, no shell metacharacters, no
+# leading dash - this is the last check before it reaches codex); a
+# well-formed slug the API does not know fails there with the vendor's own
+# message, which was already the documented outcome for a slug the old
+# literal list did not carry. The pattern sits in a variable because bash 3.2
+# (macOS /bin/bash) mis-parses quoted regex operands to =~.
+_codex_slug_re='^gpt-[1-9][0-9]*(\.[0-9]+)?-(sol|terra|luna|astra)$'
 case "$MODEL" in
-  ""|gpt-5.6-sol|gpt-5.6-terra|gpt-5.6-luna|gpt-6-astra) ;;
-  *) die "model must be one of: gpt-5.6-sol gpt-5.6-terra gpt-5.6-luna gpt-6-astra (got '$MODEL')" ;;
+  "")    ;;
+  sol|terra|luna|astra)
+    _codex_tier="$MODEL"
+    case "$_codex_tier" in
+      sol)   MODEL="$MODEL_TIER_SOL" ;;
+      terra) MODEL="$MODEL_TIER_TERRA" ;;
+      luna)  MODEL="$MODEL_TIER_LUNA" ;;
+      astra) MODEL="$MODEL_TIER_ASTRA" ;;
+    esac
+    # The map entry must be a well-formed slug of the SAME family name as the
+    # tier asked for (cross-vendor review 2026-09-23: without this, the
+    # review-exempt pin move could repoint luna at an astra slug and the role
+    # would still be called luna).
+    { [[ "$MODEL" =~ $_codex_slug_re ]] && [ "${MODEL##*-}" = "$_codex_tier" ]; } \
+      || die "tier map entry for '$_codex_tier' is '$MODEL', which is not a $_codex_tier slug; a pin may move a tier only within the same name (the check enforces the name; newer-only is the rule in MODELS.md) - anything else is a tier change and goes through the review gate"
+    unset _codex_tier ;;
+  *)
+    [[ "$MODEL" =~ $_codex_slug_re ]] || die "model must be a tier (sol terra luna astra) or a slug shaped gpt-<major>[.<minor>]-<tier> (got '$MODEL')" ;;
 esac
+unset _codex_slug_re
+# Say what the run will ask for. Note that codex's own run header repeats the
+# REQUEST on its `model:` line too - neither line proves the model was served,
+# because an API refusal arrives after both (measured 2026-09-23: a refused
+# `gpt-6-terra` run still logged `model: gpt-6-terra`). Served means exit 0
+# with an answer file and no API error in the log.
+[ -z "$MODEL" ] || printf 'codex-agent: model %s\n' "$MODEL" >&2
 
 # Shape check keeps the resume id out of option position: must start
 # alphanumeric, then only [A-Za-z0-9._-] (the CLI accepts thread names, so
