@@ -4,6 +4,19 @@ All notable changes to this kit are recorded here, in plain English, so
 anyone installing it can tell what changed without reading the code. Format
 loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## 1.1.2 - 2026-09-23
+
+Claude Code keeps its working files for each session on your Mac - the record of
+sessions started from Terminal, plans, undo checkpoints, pasted text - for 30 days, then
+deletes them. (Sessions started from the Claude app itself were already kept.) The
+installer now sets that retention to a year, by adding `"cleanupPeriodDays": 365` to
+`~/.claude/settings.json`, and only if that setting is not already there - a value you
+have set yourself is left alone. These are plain-text records on your own Mac; if you
+would rather keep less, lower the number in that file. The drift check
+(`./install.sh --check`) now reports it alongside the model pins. Nothing else changes.
+There's nothing to do on your side beyond the usual update (the one pasted message in
+`README.md`).
+
 ## 1.1.1 - 2026-09-23
 
 Five improvements to the ops-project-suite (documents/admin projects) - four learned from

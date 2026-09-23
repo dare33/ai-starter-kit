@@ -54,6 +54,9 @@ Paste this into Claude: *Pull the latest kit
 it replaces into a dated folder under `~/.claude/backups/`. Your own notes
 in `CLAUDE.md` and your settings (projects folder, spelling, whether GPT is
 set up) are kept; the kit's own rules, agent files and pins are replaced.
+Since 1.1.2 the installer also sets a one-year retention for Claude Code's
+session files (`cleanupPeriodDays` in `settings.json`) if you have not set
+one yourself.
 (Updating from the very first release, 1.0.0: this first update also moves
 your existing choices into the file that later updates read directly —
 automatic, and Phase 9 shows you the result to check.)
