@@ -532,8 +532,14 @@ import json, sys
 try:
     with open(sys.argv[1]) as f:
         data = json.load(f)
-    v = data.get("cleanupPeriodDays") if isinstance(data, dict) else None
-    print(f"set ({v})|ok" if v is not None else "missing|drift")
+    if not isinstance(data, dict):
+        raise ValueError("not a JSON object")
+    if "cleanupPeriodDays" not in data:
+        print("missing|drift")
+    else:
+        v = data["cleanupPeriodDays"]
+        ok = isinstance(v, int) and not isinstance(v, bool) and v >= 1
+        print(f"set ({v})|ok" if ok else f"invalid ({v!r})|drift")
 except Exception:
     print("unreadable|drift")
 PY
@@ -732,11 +738,12 @@ except Exception:
         print(f'      "{k}": "{v}"')
 PY
 
-# 2b. Transcript retention — Claude Code deletes local session transcripts
-# after 30 days unless settings.json says otherwise, which silently loses
-# the ability to reopen an older session. Set cleanupPeriodDays to a year,
-# but ONLY if the key is absent: an existing value, whatever it is, is the
-# person's own choice and is left alone. Same atomic-write recipe as above.
+# 2b. Transcript retention — Claude Code deletes its per-session working
+# files (Terminal-started session transcripts, plans, undo checkpoints,
+# paste cache) after 30 days unless settings.json says otherwise; sessions
+# started from the Claude app are exempt already. Set cleanupPeriodDays to
+# a year, but ONLY if the key is absent: an existing value, whatever it is,
+# is the person's own choice and is left alone. Same atomic-write recipe.
 backup "$SETTINGS"
 python3 - "$SETTINGS" <<'PY'
 import json, os, sys
@@ -768,7 +775,7 @@ except Exception:
             os.remove(tmp)
         except Exception:
             pass
-    print(f'    WARNING: could not set transcript retention in ~/.claude/settings.json (not valid JSON, or the folder could not be written to); the original file is untouched. the setup assistant will add this top-level key for you: "{KEY}": {DAYS}')
+    print(f'    WARNING: could not set transcript retention in ~/.claude/settings.json (not valid JSON, not a JSON object, or the folder could not be written to); the original file is untouched. the setup assistant will add this top-level key for you: "{KEY}": {DAYS}')
 PY
 
 # 3. Global CLAUDE.md — personal block on top (an existing "## About me"

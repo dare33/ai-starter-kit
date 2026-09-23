@@ -49,7 +49,7 @@ rather than telling them "everything else stays sandboxed":
     Click **Allow** each time.
 (b) **The unsandboxed retry of `./install.sh`** — the installer is re-run,
     each time needing this same retry, at every one of these points: Phase 5
-    (the first install), Phase 6 step 6 (once GPT is confirmed working),
+    (the first install), Phase 6 step 7 (once GPT is confirmed working),
     Phase 7 (after any conf setting changes), and Phase 9 (every future
     update). `install.sh` writes into `~/.claude`, and Claude Code's safety
     sandbox blocks any command from writing there; the harness offers to
@@ -302,7 +302,7 @@ Read its output. Any line starting with `WARNING` is something to read out
 in plain words. Two are expected and not failures: "not logged in" if Phase 4
 was skipped or timed out, and "codex CLI not found" if Phase 2's answer was
 No, Not sure, or an Intel Mac with no Homebrew — say so plainly rather than
-treating either as something gone wrong. Two others are not something to
+treating either as something gone wrong. Three others are not something to
 just read out: the malformed-settings WARNING about
 `~/.claude/settings.json` (permission rule), the matching WARNING about
 the model tier pins, and the one about transcript retention — all three are
@@ -337,14 +337,15 @@ permission forever.
    Claude Code only reads these pins at the start of a session, so nothing
    changes for this session — say so, and remind them at Phase 8 to quit and
    reopen once everything is done.
-5. Confirm the same file has a top-level `cleanupPeriodDays` key (any value).
-   If it is missing, that's the transcript-retention WARNING case from
-   Phase 5 — add `"cleanupPeriodDays": 365` at the top level yourself with
-   the file-edit tool, re-parse to confirm (same command as check 2) and
-   re-check. It keeps the record of each session for a year instead of the
-   default 30 days, so older sessions can still be reopened.
+5. Confirm the same file has a top-level `cleanupPeriodDays` key whose value
+   is a whole number of 1 or more (any such value is fine — it is theirs).
+   If it is missing or not a whole number, add or replace it with
+   `"cleanupPeriodDays": 365` at the top level yourself with the file-edit
+   tool (a missing key is the transcript-retention WARNING case from Phase
+   5), re-parse to confirm (same command as check 2) and re-check. It keeps
+   Claude Code's per-session files for a year instead of the default 30 days.
 
-5. If Phase 4 was done, run one probe (Claude Code may ask them to allow this
+6. If Phase 4 was done, run one probe (Claude Code may ask them to allow this
    command once; that's expected — tell them to click Allow). Run this as a
    **single** Bash call — deriving the projects folder and calling the
    wrapper must happen in the same call, since a variable set in one call
@@ -414,7 +415,7 @@ mkdir -p "$PROJECTS_DIR/.gpt-runs/probe"
    whether it's caught up" — nothing about this is automatic; nothing
    re-probes until Phase 9 runs. Any other error from either probe: stop and
    explain.
-6. If a probe (the pinned one, or the `gpt-5.6-*` fallback above) returned
+7. If a probe (the pinned one, or the `gpt-5.6-*` fallback above) returned
    `PROBE OK` and `~/.claude/ai-starter-kit.conf` has
    `GPT=no` (from an earlier Phase 7) or no `GPT` line at all, open the conf
    file with the file-edit tool, set the line to `GPT=yes` (add it if
@@ -594,7 +595,10 @@ of a first install.
    code, not just its text: `0` means everything installed matches what the
    kit ships; anything else means something is still out of date or
    missing — read the table it prints and say plainly, in your own words,
-   which row is out of step.
+   which row is out of step. A `settings.json` row out of step (the allow
+   rule, the env pins, or `cleanupPeriodDays`), or a settings WARNING in
+   step 3's output, is yours to repair the same way as on a first install:
+   Phase 6 checks 2, 4 and 5.
 6. If the check shows codex or Claude Code below the minimum version listed
    in `~/ai-starter-kit/MODELS.md` for a pin this update moved, say so
    plainly and give the one command to fix it: `brew upgrade --cask codex`
@@ -603,12 +607,12 @@ of a first install.
    claude.ai/download for a newer Claude Code — do not attempt either
    silently, since both can involve a password prompt or a restart. If the
    conf's `GPT` line is `yes` and codex is current enough, re-run the
-   Phase 6 GPT probe (step 5 there) to confirm GPT still works after the
+   Phase 6 GPT probe (step 6 there) to confirm GPT still works after the
    pin move — the `sol` and `luna` tiers may now need a newer codex-cli
    than the version last confirmed working. Same logic as Phase 6 applies
    here if the pinned probe fails on a named-model API refusal: fall back to
    probing `gpt-5.6-sol` and `gpt-5.6-luna` separately and set only the
-   override(s) whose own probe passed (Phase 6 step 5 has the exact recipe
+   override(s) whose own probe passed (Phase 6 step 6 has the exact recipe
    and the honest one-sentence wording to use).
    The reverse also matters here, since this phase is what a person with an
    existing override will hit next: if the conf already has `TIER_SOL` or
