@@ -4,6 +4,15 @@ All notable changes to this kit are recorded here, in plain English, so
 anyone installing it can tell what changed without reading the code. Format
 loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## 1.1.2 - 2026-09-23
+
+Claude Code deletes the record of each session from your Mac after 30 days unless a
+setting says otherwise, so an older session could no longer be reopened or searched. The
+installer now sets that retention to a year (`cleanupPeriodDays: 365` in
+`~/.claude/settings.json`), and only if the setting is not already there - a value you
+have set yourself is left alone. The update check reports it alongside the model pins.
+Nothing else changes. Usual update (the one pasted message in `README.md`).
+
 ## 1.1.1 - 2026-09-23
 
 Five improvements to the ops-project-suite (documents/admin projects) - four learned from

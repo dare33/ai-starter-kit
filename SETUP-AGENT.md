@@ -304,9 +304,9 @@ was skipped or timed out, and "codex CLI not found" if Phase 2's answer was
 No, Not sure, or an Intel Mac with no Homebrew — say so plainly rather than
 treating either as something gone wrong. Two others are not something to
 just read out: the malformed-settings WARNING about
-`~/.claude/settings.json` (permission rule) and the matching WARNING about
-the model tier pins — both are your job to repair yourself, in Phase 6,
-checks 2 and 4.
+`~/.claude/settings.json` (permission rule), the matching WARNING about
+the model tier pins, and the one about transcript retention — all three are
+your job to repair yourself, in Phase 6, checks 2, 4 and 5.
 
 ## Phase 6 — Verify
 
@@ -337,6 +337,12 @@ permission forever.
    Claude Code only reads these pins at the start of a session, so nothing
    changes for this session — say so, and remind them at Phase 8 to quit and
    reopen once everything is done.
+5. Confirm the same file has a top-level `cleanupPeriodDays` key (any value).
+   If it is missing, that's the transcript-retention WARNING case from
+   Phase 5 — add `"cleanupPeriodDays": 365` at the top level yourself with
+   the file-edit tool, re-parse to confirm (same command as check 2) and
+   re-check. It keeps the record of each session for a year instead of the
+   default 30 days, so older sessions can still be reopened.
 
 5. If Phase 4 was done, run one probe (Claude Code may ask them to allow this
    command once; that's expected — tell them to click Allow). Run this as a

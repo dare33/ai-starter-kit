@@ -526,6 +526,26 @@ PY
   fi
   row "env pins (4 keys)" "$env_state" "see MODELS.md"
 
+  if [ -f "$CLAUDE_DIR/settings.json" ]; then
+    RET_STATE="$(python3 - "$CLAUDE_DIR/settings.json" <<'PY'
+import json, sys
+try:
+    with open(sys.argv[1]) as f:
+        data = json.load(f)
+    v = data.get("cleanupPeriodDays") if isinstance(data, dict) else None
+    print(f"set ({v})|ok" if v is not None else "missing|drift")
+except Exception:
+    print("unreadable|drift")
+PY
+)"
+    ret_state="${RET_STATE%%|*}"
+    [ "${RET_STATE##*|}" = "ok" ] || DRIFT=1
+  else
+    ret_state="settings.json missing"
+    DRIFT=1
+  fi
+  row "cleanupPeriodDays (transcripts)" "$ret_state" "365 if absent"
+
   CODEX_BIN=""
   for c in /opt/homebrew/bin/codex /usr/local/bin/codex; do
     [ -x "$c" ] && CODEX_BIN="$c" && break
@@ -710,6 +730,45 @@ except Exception:
     print("    WARNING: ~/.claude/settings.json is not in a shape I can safely merge into (not valid JSON, or env isn't a JSON object), or the folder could not be written to; the original file is untouched. the setup assistant will add these keys to the env block for you (see claude/settings-env.json in the kit):")
     for k, v in new_env.items():
         print(f'      "{k}": "{v}"')
+PY
+
+# 2b. Transcript retention — Claude Code deletes local session transcripts
+# after 30 days unless settings.json says otherwise, which silently loses
+# the ability to reopen an older session. Set cleanupPeriodDays to a year,
+# but ONLY if the key is absent: an existing value, whatever it is, is the
+# person's own choice and is left alone. Same atomic-write recipe as above.
+backup "$SETTINGS"
+python3 - "$SETTINGS" <<'PY'
+import json, os, sys
+path = os.path.realpath(sys.argv[1])
+KEY, DAYS = "cleanupPeriodDays", 365
+tmp = None
+try:
+    with open(path) as f:
+        data = json.load(f)
+    if not isinstance(data, dict):
+        raise ValueError("settings.json is not a JSON object")
+    if KEY in data:
+        print(f"    transcript retention already set in settings.json ({KEY}={data[KEY]}), left as is")
+    else:
+        data[KEY] = DAYS
+        tmp = path + ".tmp"
+        with open(tmp, "w") as f:
+            json.dump(data, f, indent=2)
+            f.write("\n")
+        with open(tmp) as f:
+            json.load(f)
+        mode = os.stat(path).st_mode & 0o777
+        os.chmod(tmp, mode)
+        os.replace(tmp, path)
+        print(f"    set transcript retention in settings.json ({KEY}={DAYS})")
+except Exception:
+    if tmp and os.path.exists(tmp):
+        try:
+            os.remove(tmp)
+        except Exception:
+            pass
+    print(f'    WARNING: could not set transcript retention in ~/.claude/settings.json (not valid JSON, or the folder could not be written to); the original file is untouched. the setup assistant will add this top-level key for you: "{KEY}": {DAYS}')
 PY
 
 # 3. Global CLAUDE.md — personal block on top (an existing "## About me"
